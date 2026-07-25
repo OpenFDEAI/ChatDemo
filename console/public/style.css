@@ -163,15 +163,16 @@ body { display: flex; flex-direction: column; }
   background: var(--accent-soft);
 }
 .dropzone-slim {
-  min-height: 58px;
+  flex: 1 1 auto;
+  min-height: 96px;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 12px 14px;
+  padding: 16px 14px;
 }
-.hero-icon { font-size: 22px; color: var(--accent); line-height: 1; }
+.hero-icon { font-size: 30px; color: var(--accent); line-height: 1; }
 .hero-text { line-height: 1.7; font-size: 13px; }
 .filelink { color: var(--accent); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 
@@ -396,4 +397,4 @@ input[type="text"]:focus, textarea:focus {
 #demo-url:hover { color: var(--accent); }
 
 /* Demo 描述：主输入通道，给足高度 */
-#note { min-height: 110px; flex: 1 1 auto; }
+#note { flex: 0 0 auto; height: 118px; } /* 约 5 行 */

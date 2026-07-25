@@ -20,7 +20,7 @@
 <main class="columns">
   <!-- 左列：主操作区（拖材料+录音）/ 转写流 / Demo 描述+生成 / 回合记录 -->
   <section class="col col-left">
-    <div class="card hero-card">
+    <div class="card card-grow hero-card">
       <div id="dropzone" class="dropzone dropzone-slim">
         <span class="hero-icon">⇪</span>
         <span class="hero-text">拖拽截图 / API 文档到这里，<label class="filelink">或点击选择<input id="file-input" type="file" multiple hidden></label></span>
@@ -46,7 +46,7 @@
       </div>
     </div>
 
-    <div class="card card-grow">
+    <div class="card">
       <h2>输入 Demo 描述 <span class="hint">可选；生成时计入转写流，不填就按语音增量生成</span></h2>
       <textarea id="note" rows="5" placeholder="想要什么样的 Demo，说给它听或写在这里（录音不可用时这里就是逃生通道）"></textarea>
       <div class="gen-row">
