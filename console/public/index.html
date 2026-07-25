@@ -21,35 +21,29 @@
   <!-- 左列：主操作区（拖材料+录音）/ 转写流 / Demo 描述+生成 / 回合记录 -->
   <section class="col col-left">
     <div class="card hero-card">
-      <div class="hero-grid">
-        <div id="dropzone" class="dropzone dropzone-hero">
-          <div class="hero-icon">⇪</div>
-          <div class="hero-text">拖拽截图 / API 文档到这里<br>
-            <label class="filelink">或点击选择<input id="file-input" type="file" multiple hidden></label>
-          </div>
-        </div>
-        <div class="rec-hero" id="record-card">
-          <button id="btn-record" class="rec-big">● 开始录音</button>
-          <div class="rec-meta">
-            <span id="rec-time" class="mono rec-time">00:00</span>
-            <button id="btn-pause" class="btn btn-small" disabled>⏸ 暂停</button>
-          </div>
-          <div class="level-track"><div id="level-bar" class="level-bar"></div></div>
-        </div>
+      <div id="dropzone" class="dropzone dropzone-slim">
+        <span class="hero-icon">⇪</span>
+        <span class="hero-text">拖拽截图 / API 文档到这里，<label class="filelink">或点击选择<input id="file-input" type="file" multiple hidden></label></span>
       </div>
       <ul id="inputs-list" class="inputs-list mono small"></ul>
+    </div>
+
+    <div class="card card-grow" id="record-card">
+      <h2>录音 · 转写流 <span class="hint">高亮 = 未消费增量</span></h2>
+      <div class="rec-row">
+        <button id="btn-record" class="rec-big">● 开始录音</button>
+        <span id="rec-time" class="mono rec-time">00:00</span>
+        <button id="btn-pause" class="btn btn-small" disabled>⏸ 暂停</button>
+      </div>
+      <div class="level-track"><div id="level-bar" class="level-bar"></div></div>
+      <div id="transcript" class="transcript mono"></div>
+      <div id="partial" class="partial mono"></div>
       <div id="asr-reason" class="muted small"></div>
       <div id="asr-creds" class="asr-creds hidden">
         <input id="volc-app" type="text" placeholder="火山 APP ID" autocomplete="off">
         <input id="volc-key" type="password" placeholder="Access Token" autocomplete="off">
         <button id="btn-save-creds" class="btn btn-small">保存凭证</button>
       </div>
-    </div>
-
-    <div class="card">
-      <h2>转写流 <span class="hint">高亮 = 未消费增量</span></h2>
-      <div id="transcript" class="transcript mono"></div>
-      <div id="partial" class="partial mono"></div>
     </div>
 
     <div class="card">
