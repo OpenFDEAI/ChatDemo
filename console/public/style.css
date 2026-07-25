@@ -338,8 +338,9 @@ input[type="text"]:focus, textarea:focus {
 .gen-btn { flex: 1; font-weight: 700; padding: 11px 14px; font-size: 14px; }
 #engine-hint.err { color: var(--danger); }
 
-/* ---------- 回合记录：账本 + 实时日志 ---------- */
-#journal-card .journal { max-height: none; flex: 1 1 auto; }
+/* ---------- 回合记录：账本与实时日志各占一半 ---------- */
+#journal-card .journal { max-height: none; flex: 1 1 50%; min-height: 0; }
+#journal-card .turnlog { flex: 1 1 50%; min-height: 0; max-height: none; }
 .journal {
   overflow-y: auto;
   background: transparent;
