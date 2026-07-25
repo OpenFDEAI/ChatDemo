@@ -53,7 +53,14 @@ Claude Code 回合。要求本机已认证 Claude Code（运行过 `claude` 登�
 默认断网——npm install 类重活放会前做，回合内只改文件。
 `FDE_CODEX_BIN` 环境变量可覆盖 codex 可执行文件路径（测试用）。
 
-## 语音转写（FunASR）
+## 语音转写
+
+**测试模式（零安装）**：未启用 `--asr funasr` 时，若浏览器支持
+SpeechRecognition（Chrome/Edge/Safari），录音卡片自动进入「浏览器识别」
+模式——点 ● 即可录音转写。**仅供测试**：识别由浏览器提供、可能经厂商
+云端；客户现场必须用下面的 FunASR 本地转写（红线：客户对话不上云）。
+
+## 本地转写（FunASR，客户现场用）
 
 `--asr funasr` 时控制台连接本地 FunASR runtime（`ws://127.0.0.1:10096`，
 2pass 双通道协议：online 实时 partial + offline 二遍精修 final）。

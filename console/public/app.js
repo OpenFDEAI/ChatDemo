@@ -36,6 +36,7 @@ const state = {
   ws: null,
   demoUrl: '',
   asrMode: 'none',
+  asrEngine: null, // 'funasr' | 'webspeech' | null
   asrAvailable: false,
   recording: false,
   paused: false,
@@ -43,6 +44,7 @@ const state = {
   timerId: null,
   audioCtx: null,
   mediaStream: null,
+  recognition: null,
 };
 
 /* ---------- WebSocket ---------- */
@@ -157,8 +159,21 @@ function renderState(msg) {
     el.turnIndicator.classList.add('hidden');
   }
   el.turnStatus.textContent = msg.turnQueued > 0 ? `排队中的回合：${msg.turnQueued}` : '';
-  if (msg.asr === 'none' && !state.recording) {
-    setAsrUnavailable('未启用 ASR（--asr none）。手动输入始终可用；用 --asr funasr 重启可开录音。');
+  if (msg.asr === 'funasr') {
+    state.asrEngine = 'funasr';
+  } else if (!state.recording) {
+    const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (Rec) {
+      // 未启用 FunASR 时的零安装兜底：浏览器识别。仅测试用——识别由浏览器
+      // 提供、可能经厂商云端；客户现场必须 --asr funasr 走本地转写（红线）。
+      state.asrEngine = 'webspeech';
+      state.asrAvailable = true;
+      el.recordCard.classList.remove('disabled');
+      el.asrReason.textContent =
+        '浏览器识别模式（测试用：识别由浏览器提供、可能经厂商云端）。客户现场请起 FunASR 并加 --asr funasr 重启，本地转写不上云。';
+    } else {
+      setAsrUnavailable('未启用 ASR 且浏览器不支持语音识别。手动输入始终可用；起 FunASR 后加 --asr funasr 重启。');
+    }
   }
 }
 
@@ -278,8 +293,64 @@ function fmtTime(sec) {
   return `${m}:${s}`;
 }
 
+function beginRecordingUi() {
+  state.recording = true;
+  state.paused = false;
+  state.seconds = 0;
+  el.recordCard.classList.add('recording');
+  el.btnRecord.textContent = '■ 停止';
+  el.btnPause.disabled = false;
+  el.btnPause.textContent = '⏸ 暂停';
+  state.timerId = setInterval(() => {
+    if (!state.paused) {
+      state.seconds += 1;
+      el.recTime.textContent = fmtTime(state.seconds);
+    }
+  }, 1000);
+}
+
+function startWebspeech() {
+  const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const rec = new Rec();
+  state.recognition = rec;
+  rec.lang = 'zh-CN';
+  rec.continuous = true;
+  rec.interimResults = true;
+  rec.onresult = (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const r = e.results[i];
+      if (r.isFinal) {
+        const text = r[0].transcript.trim();
+        if (text) send({ type: 'transcript', text });
+      } else {
+        interim += r[0].transcript;
+      }
+    }
+    el.partial.textContent = interim ? `… ${interim}` : '';
+  };
+  rec.onerror = (e) => {
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      setAsrUnavailable('麦克风或识别权限被拒绝，请在浏览器地址栏允许后重试。');
+      stopRecordingUi();
+    }
+  };
+  rec.onend = () => {
+    // 浏览器会周期性掐断 continuous 识别，录音中自动续上。
+    if (state.recording && !state.paused) {
+      try { rec.start(); } catch { /* 已在运行 */ }
+    }
+  };
+  rec.start();
+  beginRecordingUi();
+}
+
 async function startRecording() {
   if (state.recording) return;
+  if (state.asrEngine === 'webspeech') {
+    startWebspeech();
+    return;
+  }
   send({ type: 'asr-start' });
   try {
     state.mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -303,25 +374,17 @@ async function startRecording() {
     }
   };
   source.connect(node);
-
-  state.recording = true;
-  state.paused = false;
-  state.seconds = 0;
-  el.recordCard.classList.add('recording');
-  el.btnRecord.textContent = '■ 停止';
-  el.btnPause.disabled = false;
-  el.btnPause.textContent = '⏸ 暂停';
-  state.timerId = setInterval(() => {
-    if (!state.paused) {
-      state.seconds += 1;
-      el.recTime.textContent = fmtTime(state.seconds);
-    }
-  }, 1000);
+  beginRecordingUi();
 }
 
 function stopRecordingUi() {
   state.recording = false;
   state.paused = false;
+  if (state.recognition) {
+    try { state.recognition.stop(); } catch { /* 已停止 */ }
+    state.recognition = null;
+  }
+  el.partial.textContent = '';
   if (state.timerId) { clearInterval(state.timerId); state.timerId = null; }
   el.recordCard.classList.remove('recording');
   el.btnRecord.textContent = '● 开始';
@@ -339,7 +402,7 @@ function stopRecordingUi() {
 }
 
 function stopRecording() {
-  send({ type: 'asr-stop' });
+  if (state.asrEngine !== 'webspeech') send({ type: 'asr-stop' });
   stopRecordingUi();
 }
 
@@ -354,6 +417,13 @@ el.btnPause.addEventListener('click', () => {
   if (!state.recording) return;
   state.paused = !state.paused;
   el.btnPause.textContent = state.paused ? '▶ 继续' : '⏸ 暂停';
+  if (state.asrEngine === 'webspeech' && state.recognition) {
+    if (state.paused) {
+      try { state.recognition.stop(); } catch { /* 已停止 */ }
+    } else {
+      try { state.recognition.start(); } catch { /* 已在运行 */ }
+    }
+  }
 });
 
 function sendManual() {
