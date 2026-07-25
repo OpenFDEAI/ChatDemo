@@ -31,6 +31,7 @@ const el = {
   turnLog: $('turn-log'),
   spec: $('spec'),
   candidates: $('candidates'),
+  candidatesCard: $('candidates-card'),
   btnRefresh: $('btn-refresh'),
   demoFrame: $('demo-frame'),
   demoUrl: $('demo-url'),
@@ -161,6 +162,11 @@ function renderState(msg) {
   renderTranscript(msg.transcript, msg.consumedOffset);
   el.spec.innerHTML = renderMarkdown(msg.spec || '（空）');
   el.candidates.innerHTML = renderMarkdown(msg.candidates || '（空）');
+  // 空清单不占中栏：表格除表头/分隔行外没有数据行就藏起整张卡。
+  const candidateRows = (msg.candidates || '')
+    .split('\n')
+    .filter((l) => l.trim().startsWith('|')).length;
+  el.candidatesCard.classList.toggle('hidden', candidateRows <= 2);
   if (msg.turnActive == null && !msg.turnQueued) {
     el.turnIndicator.classList.add('hidden');
     restoreTurnButton();
