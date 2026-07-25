@@ -42,8 +42,10 @@
 git clone https://github.com/OpenFDEAI/ChatDemo.git && cd ChatDemo && npm link
 
 # 之后每次拜访客户：新建一个文件夹，终端里敲
-fde-demo
+chatdemo
 ```
+
+（旧命令 `fde-demo` 保留为等价别名。）
 
 一条命令自动完成：建工作区骨架 → 拷模板装依赖（仅首次）→ 起 Demo dev
 server → 起面板 → 自动选可用引擎 → 打开浏览器。然后就是现场三件事：

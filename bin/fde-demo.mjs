@@ -9,7 +9,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const consoleDir = path.join(root, 'console');
 
 if (!existsSync(path.join(consoleDir, 'node_modules'))) {
-  console.log('[fde-demo] 首次运行：安装控制台依赖…');
+  console.log('[chatdemo] 首次运行：安装面板依赖…');
   const result = spawnSync('npm', ['install', '--no-fund', '--no-audit'], {
     cwd: consoleDir,
     stdio: 'inherit',

@@ -1,10 +1,11 @@
 {
-  "name": "fde-demo",
+  "name": "chatdemo",
   "private": true,
   "version": "0.1.0",
   "description": "Build the demo while you talk — on-site demo workflow for Forward Deployed Engineers.",
   "type": "module",
   "bin": {
+    "chatdemo": "bin/fde-demo.mjs",
     "fde-demo": "bin/fde-demo.mjs"
   },
   "scripts": {

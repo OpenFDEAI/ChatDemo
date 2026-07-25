@@ -25,7 +25,7 @@ import { VolcanoAsrAdapter } from './asr/volcano.js';
 const CONSOLE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const TEMPLATE_DIR = path.resolve(CONSOLE_DIR, '..', 'skills', 'fde-demo', 'templates', 'base');
 
-const USAGE = `用法：fde-demo [选项]（在拜访工作区目录里直接运行即可）
+const USAGE = `用法：chatdemo [选项]（在拜访工作区目录里直接运行即可）
 
   --workspace <path>   工作区目录（默认：当前目录）
   --adapter <name>     mock | claude | codex（默认：自动选择可用引擎）
@@ -84,7 +84,7 @@ async function ensureApp(workspace: string): Promise<string> {
     if (!existsSync(TEMPLATE_DIR)) {
       throw new Error(`找不到模板：${TEMPLATE_DIR}（FDEDemo 仓库不完整？）`);
     }
-    console.log('[fde-demo] 工作区没有 app/，从模板底座创建…');
+    console.log('[chatdemo] 工作区没有 app/，从模板底座创建…');
     await fs.cp(TEMPLATE_DIR, appDir, {
       recursive: true,
       filter: (src) =>
@@ -94,7 +94,7 @@ async function ensureApp(workspace: string): Promise<string> {
     });
   }
   if (!existsSync(path.join(appDir, 'node_modules'))) {
-    console.log('[fde-demo] 安装 Demo 依赖（首次约 1 分钟）…');
+    console.log('[chatdemo] 安装 Demo 依赖（首次约 1 分钟）…');
     await runNpm(['install', '--no-fund', '--no-audit'], appDir);
   }
   return appDir;
@@ -125,7 +125,7 @@ async function main(): Promise<void> {
   }
 
   const workspace = path.resolve(values.workspace ?? '.');
-  console.log(`[fde-demo] 工作区：${workspace}`);
+  console.log(`[chatdemo] 工作区：${workspace}`);
   await new Session(workspace).init();
 
   const appDir = await ensureApp(workspace);
@@ -135,7 +135,7 @@ async function main(): Promise<void> {
   const demoPort = await findFreePort(Number.parseInt(values['demo-port'] ?? '3000', 10));
   const demoUrl = `http://localhost:${demoPort}`;
 
-  console.log(`[fde-demo] 启动 Demo dev server → ${demoUrl}`);
+  console.log(`[chatdemo] 启动 Demo dev server → ${demoUrl}`);
   // detached：让 npm 及其 fork 出的 next-server 同组，退出时整组带走——
   // 只杀 npm 会留下孤儿 next dev，与下次启动抢写 .next 缓存（实测事故）。
   const dev: ChildProcess = spawn('npm', ['run', 'dev', '--', '-p', String(demoPort)], {
@@ -169,7 +169,7 @@ async function main(): Promise<void> {
     process.exit(0);
   });
   dev.on('close', (code) => {
-    if (code !== null && code !== 0) console.error(`[fde-demo] Demo dev server 退出（${code}）`);
+    if (code !== null && code !== 0) console.error(`[chatdemo] Demo dev server 退出（${code}）`);
   });
 
   await waitHttp(demoUrl, 120_000);
@@ -183,7 +183,7 @@ async function main(): Promise<void> {
   } else {
     const engines = await probeEngines();
     adapter = engines.claude.available ? 'claude' : engines.codex.available ? 'codex' : 'mock';
-    console.log(`[fde-demo] 引擎自动选择：${adapter}（面板上可随时切换）`);
+    console.log(`[chatdemo] 引擎自动选择：${adapter}（面板上可随时切换）`);
   }
   let asr: 'none' | 'funasr' | 'volcano';
   if (values.asr === 'funasr' || values.asr === 'volcano' || values.asr === 'none') {
@@ -191,7 +191,7 @@ async function main(): Promise<void> {
   } else {
     // 未显式指定：有火山凭证就直接开云端转写，少敲一个参数。
     asr = new VolcanoAsrAdapter().hasCredentials() ? 'volcano' : 'none';
-    if (asr === 'volcano') console.log('[fde-demo] 检测到火山凭证，语音转写自动启用（volcano）');
+    if (asr === 'volcano') console.log('[chatdemo] 检测到火山凭证，语音转写自动启用（volcano）');
   }
 
   const consolePort = await findFreePort(Number.parseInt(values.port ?? '4321', 10));
@@ -199,7 +199,7 @@ async function main(): Promise<void> {
 
   const panelUrl = `http://localhost:${consolePort}`;
   console.log(`
-[fde-demo] 全部就绪：
+[chatdemo] 全部就绪：
   控制台   ${panelUrl}   ← 录音 / 拖材料 / 引擎切换 / ▶ 生成回合
   Demo     ${demoUrl}   ← 投屏给客户看的页面（面板右列即其预览）
   工作区   ${workspace}
@@ -211,6 +211,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((err: unknown) => {
-  console.error(`[fde-demo] 启动失败：${err instanceof Error ? err.message : String(err)}`);
+  console.error(`[chatdemo] 启动失败：${err instanceof Error ? err.message : String(err)}`);
   process.exitCode = 1;
 });
