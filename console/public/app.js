@@ -89,6 +89,8 @@ function handleMessage(msg) {
       el.turnIndicator.classList.remove('hidden');
       el.turnIndicator.className = 'pill pill-busy';
       el.turnIndicator.textContent = `回合 #${msg.turnId} 运行中…`;
+      el.btnTurn.disabled = true;
+      el.btnTurn.textContent = `⏳ 回合 #${msg.turnId} 运行中…（日志见下方）`;
       appendTurnLog(
         'status',
         `—— 回合 #${msg.turnId} 开始（引擎 ${msg.adapter || '?'}，排队 ${msg.queued || 0}）——`,
@@ -161,6 +163,7 @@ function renderState(msg) {
   el.candidates.innerHTML = renderMarkdown(msg.candidates || '（空）');
   if (msg.turnActive == null && !msg.turnQueued) {
     el.turnIndicator.classList.add('hidden');
+    restoreTurnButton();
   }
   el.turnStatus.textContent = msg.turnQueued > 0 ? `排队中的回合：${msg.turnQueued}` : '';
   if (msg.asr === 'funasr' || msg.asr === 'volcano') {
@@ -229,6 +232,11 @@ function renderAsrStatus(msg) {
   }
 }
 
+function restoreTurnButton() {
+  el.btnTurn.disabled = false;
+  el.btnTurn.textContent = '▶ 生成本回合';
+}
+
 function appendTurnLog(kind, text) {
   const div = document.createElement('div');
   div.className = `ev-${kind}`;
@@ -247,9 +255,11 @@ function handleTurnEvent(turnId, ev) {
     case 'summary': return appendTurnLog('summary', `» ${ev.summary}`);
     case 'error':
       el.turnIndicator.classList.add('hidden');
+      restoreTurnButton();
       return appendTurnLog('error', `✗ ${ev.message}`);
     case 'done':
       el.turnIndicator.classList.add('hidden');
+      restoreTurnButton();
       appendTurnLog('done', `✓ 回合 #${turnId} 完成，Demo 已刷新`);
       el.note.value = '';
       refreshDemo();

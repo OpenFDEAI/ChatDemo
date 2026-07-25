@@ -214,6 +214,16 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
         .then(async (saved) => {
           res.writeHead(200, { 'content-type': 'application/json' });
           res.end(JSON.stringify({ ok: true, name: saved }));
+          // iPhone 现场传图默认 HEIC，多模态读不了：macOS 上用系统自带
+          // sips 自动转出一份 JPG，agent 摄取用 JPG，原图保留。
+          if (process.platform === 'darwin' && /\.heic$/i.test(saved)) {
+            const src = path.join(config.workspace, 'inputs', saved);
+            const jpg = src.replace(/\.heic$/i, '.jpg');
+            spawn('sips', ['-s', 'format', 'jpeg', src, '--out', jpg], { stdio: 'ignore' }).on(
+              'close',
+              () => void broadcastState(),
+            );
+          }
           await broadcastState();
         })
         .catch((err: unknown) => {
@@ -266,8 +276,18 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
 
   const broadcastState = async (): Promise<void> => broadcast(await stateMessage());
 
+  let lastMidTurnBroadcast = 0;
   runner.onEvent((turnId, event) => {
     broadcast({ type: 'turn-event', turnId, event });
+    // 回合执行中每 ≥2s 顺带刷一次 state：spec / 材料的中间进展不能等 done
+    // 才可见——否则面板看起来像卡住（实测反馈）。
+    if (event.type === 'tool' || event.type === 'text') {
+      const now = Date.now();
+      if (now - lastMidTurnBroadcast > 2000) {
+        lastMidTurnBroadcast = now;
+        void broadcastState();
+      }
+    }
   });
 
   // --- ASR 装配（懒连接：第一次 asr-start 才去连后端） ---
