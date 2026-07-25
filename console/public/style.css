@@ -273,3 +273,72 @@ input[type="text"]:focus, textarea:focus { outline: none; border-color: var(--ac
   max-height: 260px;
   overflow-y: auto;
 }
+
+
+/* ---- 主操作区 hero：拖材料 + 录音 ---- */
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 10px;
+}
+.dropzone-hero {
+  min-height: 128px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 12px;
+}
+.hero-icon {
+  font-size: 26px;
+  color: var(--accent);
+  line-height: 1;
+}
+.hero-text {
+  text-align: center;
+  line-height: 1.7;
+}
+.rec-hero {
+  min-height: 128px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+}
+.rec-big {
+  width: 100%;
+  border: none;
+  border-radius: 999px;
+  padding: 11px 16px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  background: var(--accent);
+  color: var(--accent-ink);
+  cursor: pointer;
+}
+.rec-big:hover { opacity: .92; }
+#record-card.recording .rec-big { background: #c9302c; color: #fff; }
+#record-card.disabled .rec-big { opacity: .35; pointer-events: none; }
+.rec-meta { display: flex; align-items: center; gap: 10px; }
+
+/* 生成行：引擎 + 生成 Demo 同栏 */
+.gen-row { display: flex; gap: 8px; margin-top: 8px; align-items: stretch; }
+.gen-row select {
+  background: var(--panel-2);
+  color: inherit;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font: inherit;
+}
+.gen-btn { flex: 1; font-weight: 600; }
+
+/* 合并后的回合记录卡：账本 + 实时日志同卡 */
+#journal-card .journal { max-height: 180px; }
+#journal-card .turnlog { max-height: 130px; }

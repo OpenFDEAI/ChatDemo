@@ -93,7 +93,7 @@ function handleMessage(msg) {
       el.turnIndicator.className = 'pill pill-busy';
       el.turnIndicator.textContent = `回合 #${msg.turnId} 运行中…`;
       el.btnTurn.disabled = true;
-      el.btnTurn.textContent = `⏳ 回合 #${msg.turnId} 运行中…（日志见下方）`;
+      el.btnTurn.textContent = `⏳ 生成中…（回合 #${msg.turnId}）`;
       appendTurnLog(
         'status',
         `—— 回合 #${msg.turnId} 开始（引擎 ${msg.adapter || '?'}，排队 ${msg.queued || 0}）——`,
@@ -166,11 +166,10 @@ function renderState(msg) {
   renderTranscript(msg.transcript, msg.consumedOffset);
   el.spec.innerHTML = renderMarkdown(msg.spec || '（空）');
   const hasJournal = Boolean(msg.journal && msg.journal.trim());
-  el.journalCard.classList.toggle('hidden', !hasJournal);
-  if (hasJournal) {
-    el.journal.innerHTML = renderMarkdown(msg.journal);
-    el.journal.scrollTop = el.journal.scrollHeight;
-  }
+  el.journal.innerHTML = hasJournal
+    ? renderMarkdown(msg.journal)
+    : '<p class="muted">还没有回合。拖材料、说话或写描述，点「▶ 生成 Demo」。</p>';
+  if (hasJournal) el.journal.scrollTop = el.journal.scrollHeight;
   el.candidates.innerHTML = renderMarkdown(msg.candidates || '（空）');
   // 空清单不占中栏：表格除表头/分隔行外没有数据行就藏起整张卡。
   const candidateRows = (msg.candidates || '')
@@ -250,7 +249,7 @@ function renderAsrStatus(msg) {
 
 function restoreTurnButton() {
   el.btnTurn.disabled = false;
-  el.btnTurn.textContent = '▶ 生成本回合';
+  el.btnTurn.textContent = '▶ 生成 Demo';
 }
 
 function appendTurnLog(kind, text) {
@@ -278,6 +277,7 @@ function handleTurnEvent(turnId, ev) {
       restoreTurnButton();
       appendTurnLog('done', `✓ 回合 #${turnId} 完成，Demo 已刷新`);
       el.note.value = '';
+      setTimeout(() => { el.turnLog.textContent = ''; }, 2500); // 账本落账后清实时日志
       refreshDemo();
       return;
     default:
@@ -344,7 +344,7 @@ function beginRecordingUi() {
   state.paused = false;
   state.seconds = 0;
   el.recordCard.classList.add('recording');
-  el.btnRecord.textContent = '■ 停止';
+  el.btnRecord.textContent = '■ 停止录音';
   el.btnPause.disabled = false;
   el.btnPause.textContent = '⏸ 暂停';
   state.timerId = setInterval(() => {
@@ -433,7 +433,7 @@ function stopRecordingUi() {
   el.partial.textContent = '';
   if (state.timerId) { clearInterval(state.timerId); state.timerId = null; }
   el.recordCard.classList.remove('recording');
-  el.btnRecord.textContent = '● 开始';
+  el.btnRecord.textContent = '● 开始录音';
   el.btnPause.disabled = true;
   el.btnPause.textContent = '⏸ 暂停';
   el.levelBar.style.width = '0%';

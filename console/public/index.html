@@ -16,22 +16,26 @@
 </header>
 
 <main class="columns">
-  <!-- 左列：材料 / 录音 / 转写流 / 备注 / 生成回合 -->
+  <!-- 左列：主操作区（拖材料+录音）/ 转写流 / Demo 描述+生成 / 回合记录 -->
   <section class="col col-left">
-    <div class="card" id="inputs-card">
-      <h2>材料 inputs/ <span class="hint">截图、API 文档拖进来</span></h2>
-      <div id="dropzone" class="dropzone">拖拽文件到这里，或 <label class="filelink">点击选择<input id="file-input" type="file" multiple hidden></label></div>
-      <ul id="inputs-list" class="inputs-list mono small"></ul>
-    </div>
-
-    <div class="card" id="record-card">
-      <h2>录音</h2>
-      <div class="rec-controls">
-        <button id="btn-record" class="btn btn-accent">● 开始</button>
-        <button id="btn-pause" class="btn" disabled>⏸ 暂停</button>
-        <span id="rec-time" class="mono rec-time">00:00</span>
+    <div class="card hero-card">
+      <div class="hero-grid">
+        <div id="dropzone" class="dropzone dropzone-hero">
+          <div class="hero-icon">⇪</div>
+          <div class="hero-text">拖拽截图 / API 文档到这里<br>
+            <label class="filelink">或点击选择<input id="file-input" type="file" multiple hidden></label>
+          </div>
+        </div>
+        <div class="rec-hero" id="record-card">
+          <button id="btn-record" class="rec-big">● 开始录音</button>
+          <div class="rec-meta">
+            <span id="rec-time" class="mono rec-time">00:00</span>
+            <button id="btn-pause" class="btn btn-small" disabled>⏸ 暂停</button>
+          </div>
+          <div class="level-track"><div id="level-bar" class="level-bar"></div></div>
+        </div>
       </div>
-      <div class="level-track"><div id="level-bar" class="level-bar"></div></div>
+      <ul id="inputs-list" class="inputs-list mono small"></ul>
       <div id="asr-reason" class="muted small"></div>
       <div id="asr-creds" class="asr-creds hidden">
         <input id="volc-app" type="text" placeholder="火山 APP ID" autocomplete="off">
@@ -40,7 +44,7 @@
       </div>
     </div>
 
-    <div class="card card-grow">
+    <div class="card">
       <h2>转写流 <span class="hint">高亮 = 未消费增量</span></h2>
       <div id="transcript" class="transcript mono"></div>
       <div id="partial" class="partial mono"></div>
@@ -51,29 +55,28 @@
     </div>
 
     <div class="card">
-      <h2>本回合备注（可选）</h2>
-      <textarea id="note" rows="2" placeholder="给本回合的补充指令，如「基于候选项目 X 改造」「先做大屏那页」"></textarea>
-      <div class="engine-row">
-        <label for="engine" class="muted small">引擎</label>
+      <h2>输入 Demo 描述 <span class="hint">可选；不填就按转写增量生成</span></h2>
+      <textarea id="note" rows="2" placeholder="想要什么样的 Demo，说给它听或写在这里，如「基于候选项目 X 改造」「先做大屏那页」"></textarea>
+      <div class="gen-row">
         <select id="engine" title="回合驱动引擎，切换下一回合生效"></select>
-        <span id="engine-hint" class="muted small"></span>
+        <button id="btn-turn" class="btn btn-accent gen-btn">▶ 生成 Demo</button>
       </div>
-      <button id="btn-turn" class="btn btn-accent btn-big">▶ 生成本回合</button>
+      <span id="engine-hint" class="muted small"></span>
       <div id="turn-status" class="muted small"></div>
-      <div class="muted small" style="margin-top:8px">回合执行日志（相当于终端输出，滚动查看）</div>
+    </div>
+
+    <div class="card card-grow" id="journal-card">
+      <h2>回合记录 <span class="hint">输入 → 输出账本（SESSION.md）· 运行中实时日志</span></h2>
+      <div id="journal" class="md journal"></div>
       <div id="turn-log" class="turnlog mono"></div>
     </div>
   </section>
 
-  <!-- 中列：DEMO_SPEC 预览 + 候选项目 -->
+  <!-- 中列：DEMO_SPEC 预览 + 开源候选 -->
   <section class="col col-mid">
     <div class="card card-grow">
       <h2>DEMO_SPEC.md <span class="hint">单一事实源（投屏区）</span></h2>
       <div id="spec" class="md"></div>
-    </div>
-    <div class="card hidden" id="journal-card">
-      <h2>回合记录 <span class="hint">每回合的输入 → 输出，落盘在工作区 SESSION.md，刷新不丢</span></h2>
-      <div id="journal" class="md journal"></div>
     </div>
     <div class="card card-grow hidden" id="candidates-card">
       <h2>开源候选 <span class="hint">聊出新需求时，agent 搜到的可复用开源项目会列在这里，选一个基于它改</span></h2>
