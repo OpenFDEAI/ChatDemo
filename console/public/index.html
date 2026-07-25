@@ -11,6 +11,8 @@
   <div class="brand">FDE <span class="accent">ChatDemo</span> <span class="muted small">聊出 Demo</span></div>
   <div class="topbar-right">
     <span id="turn-indicator" class="pill hidden">回合运行中…</span>
+    <button id="toggle-spec" class="pill pill-toggle" title="显示/隐藏 DEMO_SPEC 面板">▤ Spec</button>
+    <button id="toggle-journal" class="pill pill-toggle active" title="显示/隐藏 回合记录面板">▥ 记录</button>
     <span id="conn" class="pill pill-off">连接中…</span>
   </div>
 </header>
@@ -70,14 +72,12 @@
       <div id="journal" class="md journal"></div>
       <div id="turn-log" class="turnlog mono"></div>
     </div>
-  </section>
 
-  <!-- 中列：DEMO_SPEC 预览 + 开源候选 -->
-  <section class="col col-mid">
-    <div class="card card-grow">
+    <div class="card card-grow hidden" id="spec-card">
       <h2>DEMO_SPEC.md <span class="hint">单一事实源（投屏区）</span></h2>
-      <div id="spec" class="md"></div>
+      <div id="spec" class="md spec-scroll"></div>
     </div>
+
     <div class="card card-grow hidden" id="candidates-card">
       <h2>开源候选 <span class="hint">聊出新需求时，agent 搜到的可复用开源项目会列在这里，选一个基于它改</span></h2>
       <div id="candidates" class="md"></div>

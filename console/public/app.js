@@ -30,6 +30,9 @@ const el = {
   turnStatus: $('turn-status'),
   turnLog: $('turn-log'),
   spec: $('spec'),
+  specCard: $('spec-card'),
+  toggleSpec: $('toggle-spec'),
+  toggleJournal: $('toggle-journal'),
   journal: $('journal'),
   journalCard: $('journal-card'),
   candidates: $('candidates'),
@@ -536,5 +539,19 @@ el.dropzone.addEventListener('drop', (e) => {
 });
 
 el.btnRefresh.addEventListener('click', refreshDemo);
+
+/* ---------- 面板开关（VS Code 式，localStorage 记忆） ---------- */
+
+function setPanel(name, on) {
+  const card = name === 'spec' ? el.specCard : el.journalCard;
+  const btn = name === 'spec' ? el.toggleSpec : el.toggleJournal;
+  card.classList.toggle('hidden', !on);
+  btn.classList.toggle('active', on);
+  localStorage.setItem(`panel.${name}`, on ? '1' : '0');
+}
+el.toggleSpec.addEventListener('click', () => setPanel('spec', el.specCard.classList.contains('hidden')));
+el.toggleJournal.addEventListener('click', () => setPanel('journal', el.journalCard.classList.contains('hidden')));
+setPanel('spec', localStorage.getItem('panel.spec') === '1');
+setPanel('journal', localStorage.getItem('panel.journal') !== '0');
 
 connect();
