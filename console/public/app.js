@@ -143,7 +143,8 @@ function renderInputs(inputs) {
 function renderState(msg) {
   state.demoUrl = msg.demoUrl;
   state.asrMode = msg.asr;
-  el.demoUrl.textContent = msg.demoUrl;
+  el.demoUrl.textContent = `${msg.demoUrl} ↗`;
+  el.demoUrl.href = msg.demoUrl;
   renderEngines(msg.adapter, msg.engines);
   renderInputs(msg.inputs);
   if (!el.demoFrame.src || el.demoFrame.src === 'about:blank') {

@@ -28,6 +28,25 @@ FDE 坐在客户对面，边聊需求边让 Demo 逐步成形：客户的截图�
 
 ## 快速开始
 
+**方式零：一条命令拉起全套（推荐的现场姿势）**
+
+```bash
+# 一次性准备：
+git clone https://github.com/OpenFDEAI/FDEDemo.git && cd FDEDemo && npm link
+
+# 之后每次拜访客户：新建一个文件夹（VS Code 打开），终端里敲：
+fde-demo
+```
+
+这条命令会在当前文件夹自动完成：建工作区骨架（spec / transcript / inputs）→
+拷贝模板 app 并装依赖（仅首次）→ 起 Demo dev server（自动找空闲端口）→
+起现场控制台（自动找空闲端口）→ 自动选可用引擎（claude → codex → mock）→
+打开浏览器。然后就是现场三件事：**拖材料进面板、说话/敲要点、点 ▶ 生成回合**；
+右列是 Demo 预览，点 URL ↗ 新窗口打开完整页面投屏。Ctrl-C 一键全退。
+
+不想 npm link 的话等价写法：`node /path/to/FDEDemo/bin/fde-demo.mjs`。
+录音需要本地 FunASR（`fde-demo --asr funasr`），没有它手动输入始终可用。
+
 **方式一：作为 Claude Code Skill（最简）**
 
 ```bash

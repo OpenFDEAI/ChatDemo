@@ -4,7 +4,11 @@
   "version": "0.1.0",
   "description": "Build the demo while you talk — on-site demo workflow for Forward Deployed Engineers.",
   "type": "module",
+  "bin": {
+    "fde-demo": "bin/fde-demo.mjs"
+  },
   "scripts": {
+    "up": "node bin/fde-demo.mjs",
     "test": "node --import tsx --test skills/fde-demo/test/*.test.ts",
     "ingest": "tsx skills/fde-demo/scripts/ingest-api.ts"
   },
