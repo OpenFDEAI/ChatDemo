@@ -43,7 +43,18 @@ cp -r FDEDemo/skills/fde-demo ~/.claude/skills/   # 或项目内 .claude/skills/
 /plugin install fde-demo
 ```
 
-**方式三：带现场控制台（录音 → 转写 → 一键回合）**
+**方式三：在 Codex 中使用**
+
+```bash
+git clone https://github.com/OpenFDEAI/FDEDemo.git && cd FDEDemo
+codex   # AGENTS.md 会引导 Codex 加载 skills/fde-demo/SKILL.md 工作流
+# 截图用 -i 附带：codex -i 客户截图.png "为 <客户> 开一场 demo session"
+```
+
+方法论、模板、摄取脚本与 Codex 完全通用（AGENTS.md 是 Codex 原生机制）；
+控制台的 Codex 适配器尚未实现，见 [AGENTS.md](AGENTS.md) 已知限制。
+
+**方式四：带现场控制台（录音 → 转写 → 一键回合）**
 
 ```bash
 cd FDEDemo/console && npm install
