@@ -113,15 +113,17 @@ function handleMessage(msg) {
 
 /* ---------- 渲染 ---------- */
 
-const ENGINE_LABELS = { mock: 'Mock（演练）', claude: 'Claude Code', codex: 'Codex' };
+const ENGINE_LABELS = { claude: 'Claude Code', codex: 'Codex', mock: 'Mock（兜底）' };
 
 function renderEngines(active, engines) {
   if (!engines) return;
-  const sig = JSON.stringify(engines);
+  // mock 只服务测试与兜底，不进现场选择列表——除非它正是当前引擎（两个真引擎都不可用时）。
+  const listed = ['claude', 'codex', ...(active === 'mock' ? ['mock'] : [])];
+  const sig = JSON.stringify({ engines, listed });
   if (el.engine.dataset.sig !== sig) {
     el.engine.dataset.sig = sig;
     el.engine.textContent = '';
-    for (const name of Object.keys(ENGINE_LABELS)) {
+    for (const name of listed) {
       const info = engines[name];
       if (!info) continue;
       const opt = document.createElement('option');
