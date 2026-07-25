@@ -3,3 +3,12 @@ node_modules/
 *.log
 .DS_Store
 examples/playground/
+
+# 凭证与本地配置：任何形态的密钥都不进这个开源仓库。
+# 正式存放位置是 ~/.fde-demo/credentials.json（仓库外、0600）。
+.env
+.env.*
+env.local
+*.local.ts
+credentials.json
+.fde-demo/
