@@ -129,6 +129,9 @@ async function main(): Promise<void> {
   await new Session(workspace).init();
 
   const appDir = await ensureApp(workspace);
+  // 每次启动清 .next：dev 缓存跨会话无价值，却是「改动大后 chunk 损坏 → 500」
+  // 这类事故的温床（实测两次）。重建只需数秒。
+  await fs.rm(path.join(appDir, '.next'), { recursive: true, force: true });
   const demoPort = await findFreePort(Number.parseInt(values['demo-port'] ?? '3000', 10));
   const demoUrl = `http://localhost:${demoPort}`;
 

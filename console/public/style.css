@@ -276,7 +276,7 @@ body { display: flex; flex-direction: column; }
   padding: 10px 12px;
   min-height: 140px;
 }
-#record-card .transcript { flex: 1 1 auto; max-height: none; }
+#record-card .transcript { flex: 0 0 auto; height: 128px; min-height: 128px; } /* 约 5 行 */
 .transcript .unconsumed {
   color: var(--accent);
   background: var(--accent-soft);
@@ -396,4 +396,4 @@ input[type="text"]:focus, textarea:focus {
 #demo-url:hover { color: var(--accent); }
 
 /* Demo 描述：主输入通道，给足高度 */
-#note { min-height: 110px; }
+#note { min-height: 110px; flex: 1 1 auto; }
