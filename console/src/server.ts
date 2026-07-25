@@ -1,5 +1,5 @@
 /**
- * FDE chat2demo 面板服务（DESIGN.md §9）。
+ * FDE ChatDemo 面板服务（DESIGN.md §9）。
  *
  * 职责边界：只做「耳朵和手」，不做「脑子」——
  * node:http 静态服务 public/ 单页面板 + WebSocket（路径 /ws）：
@@ -523,7 +523,7 @@ async function main(): Promise<void> {
     return;
   }
   await startConsole(config);
-  console.log(`FDE chat2demo 已启动（聊出 Demo）：
+  console.log(`FDE ChatDemo 已启动（聊出 Demo）：
   面板     http://localhost:${config.port}
   工作区   ${config.workspace}
   Demo     ${config.demoUrl}

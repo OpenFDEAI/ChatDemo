@@ -26,7 +26,7 @@ claude 适配器真机回合（需登录）、FunASR 语音链路（需本地起
 原因与规则修订见实录）：全程记录在 REHEARSAL.md，10 个现场场景剧本在
 skills/fde-demo/references/scenarios.md，演练工作区与产物在仓库
 examples/hongda-rehearsal/。本项目已自 OpenFDE 主仓迁出为独立仓库
-OpenFDEAI/FDEDemo（方案与实录中的旧路径 agent/skills/fde-demo 即今
+OpenFDEAI/ChatDemo（方案与实录中的旧路径 agent/skills/fde-demo 即今
 skills/fde-demo）。
 
 ---
@@ -117,7 +117,7 @@ FDE 的核心现场动作是：坐在客户对面，边聊边梳理需求，并�
 ### 3.1 Skill 包（工作流的固化）
 
 ```
-FDEDemo/                          # 独立仓库 OpenFDEAI/FDEDemo
+ChatDemo/                         # 独立仓库 OpenFDEAI/ChatDemo
   README.md · DESIGN.md · TESTING.md · REHEARSAL.md
   .claude-plugin/                 # plugin.json + marketplace.json，可 /plugin install
   skills/fde-demo/                # Skill 本体（自包含，可直接拷进 .claude/skills/）
@@ -137,7 +137,7 @@ FDEDemo/                          # 独立仓库 OpenFDEAI/FDEDemo
 ```
 
 安装：拷贝 `skills/fde-demo` 到 `.claude/skills/`，或
-`/plugin marketplace add OpenFDEAI/FDEDemo`。
+`/plugin marketplace add OpenFDEAI/ChatDemo`。
 
 ### 3.2 每次拜访一个工作区
 
@@ -386,7 +386,7 @@ companion 当参考实现。`claudecodeui` 是 AGPL，只看模式不抄代码�
 ## 13. 开放问题（评审时请拍板）
 
 1. ~~控制台起点~~ **已定并交付**：自研薄面板（`console/`，Node + ws +
-   Agent SDK + 原生单页前端）；skill 已迁出为独立仓库 `OpenFDEAI/FDEDemo`，
+   Agent SDK + 原生单页前端）；skill 已迁出为独立仓库 `OpenFDEAI/ChatDemo`，
    实测同时通过 Claude Code 与 OpenFDE runtime 两套校验。
 2. **ASR 选型确认**：默认 FunASR（中文主场，MIT），whisper.cpp 备选；
    说话人分离（whisperX）放 v0.3 是否可接受？

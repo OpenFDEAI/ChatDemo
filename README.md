@@ -1,6 +1,6 @@
-# FDE chat2demo — 聊出 Demo
+# FDE ChatDemo — 聊出 Demo
 
-**chat2demo: the demo builds while you talk. An on-site workflow for Forward Deployed Engineers, powered by Claude Code & Codex.**
+**ChatDemo: the demo builds while you talk. An on-site workflow for Forward Deployed Engineers, powered by Claude Code & Codex.**
 
 FDE 坐在客户对面，边聊需求边让 Demo 逐步成形：客户的截图和 API 丢进去，
 对话的每个停顿处按一下「生成」，3 分钟内一个可见的界面增量。客户当场看到
@@ -32,7 +32,7 @@ FDE 坐在客户对面，边聊需求边让 Demo 逐步成形：客户的截图�
 
 ```bash
 # 一次性准备：
-git clone https://github.com/OpenFDEAI/FDEDemo.git && cd FDEDemo && npm link
+git clone https://github.com/OpenFDEAI/ChatDemo.git && cd ChatDemo && npm link
 
 # 之后每次拜访客户：新建一个文件夹（VS Code 打开），终端里敲：
 fde-demo
@@ -44,13 +44,13 @@ fde-demo
 打开浏览器。然后就是现场三件事：**拖材料进面板、说话/敲要点、点 ▶ 生成回合**；
 右列是 Demo 预览，点 URL ↗ 新窗口打开完整页面投屏。Ctrl-C 一键全退。
 
-不想 npm link 的话等价写法：`node /path/to/FDEDemo/bin/fde-demo.mjs`。
+不想 npm link 的话等价写法：`node /path/to/ChatDemo/bin/fde-demo.mjs`。
 录音需要本地 FunASR（`fde-demo --asr funasr`），没有它手动输入始终可用。
 
 **方式一：作为 Claude Code Skill（最简）**
 
 ```bash
-git clone https://github.com/OpenFDEAI/FDEDemo.git
+git clone https://github.com/OpenFDEAI/ChatDemo.git
 cp -r FDEDemo/skills/fde-demo ~/.claude/skills/   # 或项目内 .claude/skills/
 # Claude Code 里：给它客户截图 + API 文档，说"为 <客户> 开一场 demo session"
 ```
@@ -58,14 +58,14 @@ cp -r FDEDemo/skills/fde-demo ~/.claude/skills/   # 或项目内 .claude/skills/
 **方式二：作为 Plugin**
 
 ```
-/plugin marketplace add OpenFDEAI/FDEDemo
+/plugin marketplace add OpenFDEAI/ChatDemo
 /plugin install fde-demo
 ```
 
 **方式三：在 Codex 中使用**
 
 ```bash
-git clone https://github.com/OpenFDEAI/FDEDemo.git && cd FDEDemo
+git clone https://github.com/OpenFDEAI/ChatDemo.git && cd ChatDemo
 codex   # AGENTS.md 会引导 Codex 加载 skills/fde-demo/SKILL.md 工作流
 # 截图用 -i 附带：codex -i 客户截图.png "为 <客户> 开一场 demo session"
 ```
@@ -75,7 +75,7 @@ codex   # AGENTS.md 会引导 Codex 加载 skills/fde-demo/SKILL.md 工作流
 **方式四：带现场控制台（录音 → 转写 → 一键回合，claude / codex 双引擎）**
 
 ```bash
-cd FDEDemo/console && npm install
+cd ChatDemo/console && npm install
 npm start -- --workspace ../examples/my-visit          # mock 模式，无需 API key
 npm start -- --workspace ../examples/my-visit --adapter claude --asr funasr
 npm start -- --workspace ../examples/my-visit --adapter codex   # Codex 引擎
