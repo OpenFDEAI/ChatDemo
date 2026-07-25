@@ -290,8 +290,8 @@ body { display: flex; flex-direction: column; }
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   padding: 10px 12px;
-  min-height: 84px;
-  max-height: 180px;
+  min-height: 56px;
+  max-height: 110px;
 }
 .transcript .unconsumed {
   color: var(--accent);
@@ -409,3 +409,6 @@ input[type="text"]:focus, textarea:focus {
 }
 #demo-url { margin-left: auto; text-decoration: none; }
 #demo-url:hover { color: var(--accent); }
+
+/* Demo 描述：主输入通道，给足高度 */
+#note { min-height: 110px; }
