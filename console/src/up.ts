@@ -20,6 +20,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { probeEngines, startConsole, type EngineName } from './server.js';
 import { Session } from './session.js';
+import { VolcanoAsrAdapter } from './asr/volcano.js';
 
 const CONSOLE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const TEMPLATE_DIR = path.resolve(CONSOLE_DIR, '..', 'skills', 'fde-demo', 'templates', 'base');
@@ -111,7 +112,7 @@ async function main(): Promise<void> {
     options: {
       workspace: { type: 'string', default: '.' },
       adapter: { type: 'string' },
-      asr: { type: 'string', default: 'none' },
+      asr: { type: 'string' },
       port: { type: 'string', default: '4321' },
       'demo-port': { type: 'string', default: '3000' },
       'no-open': { type: 'boolean', default: false },
@@ -172,7 +173,14 @@ async function main(): Promise<void> {
     adapter = engines.claude.available ? 'claude' : engines.codex.available ? 'codex' : 'mock';
     console.log(`[fde-demo] 引擎自动选择：${adapter}（面板上可随时切换）`);
   }
-  const asr = values.asr === 'funasr' ? 'funasr' : values.asr === 'volcano' ? 'volcano' : 'none';
+  let asr: 'none' | 'funasr' | 'volcano';
+  if (values.asr === 'funasr' || values.asr === 'volcano' || values.asr === 'none') {
+    asr = values.asr;
+  } else {
+    // 未显式指定：有火山凭证就直接开云端转写，少敲一个参数。
+    asr = new VolcanoAsrAdapter().hasCredentials() ? 'volcano' : 'none';
+    if (asr === 'volcano') console.log('[fde-demo] 检测到火山凭证，语音转写自动启用（volcano）');
+  }
 
   const consolePort = await findFreePort(Number.parseInt(values.port ?? '4321', 10));
   await startConsole({ workspace, demoUrl, port: consolePort, adapter, asr });

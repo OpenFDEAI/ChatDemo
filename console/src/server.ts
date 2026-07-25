@@ -172,6 +172,18 @@ export interface RunningConsole {
   close(): Promise<void>;
 }
 
+/** 终端实时输出：面板上发生的一切在启动它的终端里同样可见。 */
+function tlog(tag: string, text: string): void {
+  const t = new Date();
+  const p = (n: number): string => String(n).padStart(2, '0');
+  const line = text.replace(/\s+/g, ' ').trim();
+  console.log(
+    `${p(t.getHours())}:${p(t.getMinutes())}:${p(t.getSeconds())} ${tag} ${
+      line.length > 160 ? `${line.slice(0, 160)}…` : line
+    }`,
+  );
+}
+
 export async function startConsole(config: ConsoleConfig): Promise<RunningConsole> {
   const session = new Session(config.workspace);
   await session.init();
@@ -214,6 +226,7 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
         .then(async (saved) => {
           res.writeHead(200, { 'content-type': 'application/json' });
           res.end(JSON.stringify({ ok: true, name: saved }));
+          tlog('[材料]', `${saved} 已入 inputs/`);
           // iPhone 现场传图默认 HEIC，多模态读不了：macOS 上用系统自带
           // sips 自动转出一份 JPG，agent 摄取用 JPG，原图保留。
           if (process.platform === 'darwin' && /\.heic$/i.test(saved)) {
@@ -281,6 +294,26 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
   let lastMidTurnBroadcast = 0;
   runner.onEvent((turnId, event) => {
     broadcast({ type: 'turn-event', turnId, event });
+    switch (event.type) {
+      case 'status':
+        tlog(`[回合#${turnId}]`, `· ${event.message}`);
+        break;
+      case 'text':
+        tlog(`[回合#${turnId}]`, event.text);
+        break;
+      case 'tool':
+        tlog(`[回合#${turnId}]`, `⚙ ${event.name}${event.detail ? ` ${event.detail}` : ''}`);
+        break;
+      case 'summary':
+        tlog(`[回合#${turnId}]`, `» ${event.summary}`);
+        break;
+      case 'error':
+        tlog(`[回合#${turnId}]`, `✗ ${event.message}`);
+        break;
+      case 'done':
+        tlog(`[回合#${turnId}]`, '✓ 完成，Demo 已刷新');
+        break;
+    }
     // 回合执行中每 ≥2s 顺带刷一次 state：spec / 材料的中间进展不能等 done
     // 才可见——否则面板看起来像卡住（实测反馈）。
     if (event.type === 'tool' || event.type === 'text') {
@@ -300,9 +333,11 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
       serverAsr = config.asr === 'volcano' ? new VolcanoAsrAdapter() : new FunasrAsrAdapter();
       serverAsr.onPartial((text) => broadcast({ type: 'asr-partial', text }));
       serverAsr.onFinal((text) => {
+        tlog('[转写]', text);
         void session.appendTranscript(text).then(() => broadcastState());
       });
       serverAsr.onStatus((status, detail) => {
+        tlog('[ASR]', `${status}${detail ? ` ${detail}` : ''}`);
         broadcast({ type: 'asr-status', status, ...(detail ? { detail } : {}) });
       });
     }
@@ -331,6 +366,7 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
         case 'transcript': {
           // 手动输入通道：直接作为 final 转写落盘（逃生通道，始终可用）。
           if (typeof msg.text === 'string') {
+            tlog('[转写]', `${msg.text}（手动/浏览器识别）`);
             void session.appendTranscript(msg.text).then(() => broadcastState());
           }
           break;
@@ -344,6 +380,7 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
           pendingNote = '';
           const engine = router.active;
           const { id, done } = runner.enqueue(note);
+          tlog(`[回合#${id}]`, `—— 开始（引擎 ${engine}，排队 ${runner.queuedCount}）——`);
           broadcast({ type: 'turn-start', turnId: id, queued: runner.queuedCount, adapter: engine });
           void done.then(async (result) => {
             // 回合落账：输入→输出进 SESSION.md，面板「回合记录」卡片渲染。
