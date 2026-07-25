@@ -6,6 +6,9 @@ const $ = (id) => document.getElementById(id);
 const el = {
   conn: $('conn'),
   turnIndicator: $('turn-indicator'),
+  dropzone: $('dropzone'),
+  fileInput: $('file-input'),
+  inputsList: $('inputs-list'),
   recordCard: $('record-card'),
   btnRecord: $('btn-record'),
   btnPause: $('btn-pause'),
@@ -124,11 +127,25 @@ function renderEngines(active, engines) {
   el.engineHint.textContent = info && info.detail ? info.detail : '';
 }
 
+function renderInputs(inputs) {
+  el.inputsList.textContent = '';
+  for (const f of inputs || []) {
+    const li = document.createElement('li');
+    const name = document.createElement('span');
+    name.textContent = f.name;
+    const size = document.createElement('span');
+    size.textContent = f.size >= 1024 ? `${Math.round(f.size / 1024)}KB` : `${f.size}B`;
+    li.append(name, size);
+    el.inputsList.appendChild(li);
+  }
+}
+
 function renderState(msg) {
   state.demoUrl = msg.demoUrl;
   state.asrMode = msg.asr;
   el.demoUrl.textContent = msg.demoUrl;
   renderEngines(msg.adapter, msg.engines);
+  renderInputs(msg.inputs);
   if (!el.demoFrame.src || el.demoFrame.src === 'about:blank') {
     el.demoFrame.src = msg.demoUrl;
   }
@@ -357,6 +374,44 @@ el.engine.addEventListener('change', () => {
   el.engineHint.className = 'muted small';
   el.engineHint.textContent = '切换中…（下一回合生效）';
   send({ type: 'set-adapter', adapter: el.engine.value });
+});
+
+/* ---------- 材料上传：拖拽 / 选择 → POST /upload → 工作区 inputs/ ---------- */
+
+async function uploadFiles(files) {
+  for (const file of files) {
+    try {
+      const res = await fetch(`/upload?name=${encodeURIComponent(file.name)}`, {
+        method: 'POST',
+        body: file,
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        appendTurnLog('error', `✗ 上传失败 ${file.name}：${body.error || res.status}`);
+      } else {
+        appendTurnLog('status', `· 材料已入 inputs/：${file.name}（下一回合自动摄取）`);
+      }
+    } catch (err) {
+      appendTurnLog('error', `✗ 上传失败 ${file.name}：${err.message}`);
+    }
+  }
+  send({ type: 'refresh-state' });
+}
+
+el.dropzone.addEventListener('click', () => el.fileInput.click());
+el.fileInput.addEventListener('change', () => {
+  if (el.fileInput.files.length) void uploadFiles([...el.fileInput.files]);
+  el.fileInput.value = '';
+});
+el.dropzone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  el.dropzone.classList.add('dragover');
+});
+el.dropzone.addEventListener('dragleave', () => el.dropzone.classList.remove('dragover'));
+el.dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  el.dropzone.classList.remove('dragover');
+  if (e.dataTransfer && e.dataTransfer.files.length) void uploadFiles([...e.dataTransfer.files]);
 });
 
 el.btnRefresh.addEventListener('click', refreshDemo);

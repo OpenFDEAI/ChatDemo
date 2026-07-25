@@ -187,7 +187,43 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
   const router = new AdapterRouter(registry, initialAdapter);
   const runner = new TurnRunner(session, router);
 
+  // 面板拖拽/选择的材料 → POST /upload?name=<文件名> → 工作区 inputs/。
+  const MAX_UPLOAD = 30 * 1024 * 1024;
+  const handleUpload = (req: IncomingMessage, res: ServerResponse): void => {
+    const url = new URL(req.url ?? '/', 'http://localhost');
+    const name = url.searchParams.get('name') ?? 'file';
+    const chunks: Buffer[] = [];
+    let size = 0;
+    req.on('data', (chunk: Buffer) => {
+      size += chunk.length;
+      if (size > MAX_UPLOAD) {
+        res.writeHead(413, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ error: '文件超过 30MB 上限' }));
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on('end', () => {
+      void session
+        .saveInput(name, Buffer.concat(chunks))
+        .then(async (saved) => {
+          res.writeHead(200, { 'content-type': 'application/json' });
+          res.end(JSON.stringify({ ok: true, name: saved }));
+          await broadcastState();
+        })
+        .catch((err: unknown) => {
+          res.writeHead(500, { 'content-type': 'application/json' });
+          res.end(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }));
+        });
+    });
+  };
+
   const server = createServer((req, res) => {
+    if (req.method === 'POST' && (req.url ?? '').startsWith('/upload')) {
+      handleUpload(req, res);
+      return;
+    }
     void serveStatic(req, res);
   });
   const wss = new WebSocketServer({ server, path: '/ws' });
@@ -200,11 +236,12 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
   };
 
   const stateMessage = async (): Promise<Record<string, unknown>> => {
-    const [spec, candidates, transcript, st] = await Promise.all([
+    const [spec, candidates, transcript, st, inputs] = await Promise.all([
       session.readSpec(),
       session.readCandidates(),
       session.readTranscript(),
       session.readState(),
+      session.listInputs(),
     ]);
     return {
       type: 'state',
@@ -214,6 +251,7 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
       asr: config.asr,
       spec,
       candidates,
+      inputs,
       transcript,
       consumedOffset: Math.min(st.consumedOffset, transcript.length),
       turnActive: runner.activeId,

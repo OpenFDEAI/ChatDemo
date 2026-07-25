@@ -216,3 +216,37 @@ input[type="text"]:focus, textarea:focus { outline: none; border-color: var(--ac
 #engine-hint.err {
   color: #e05c5c;
 }
+
+/* 材料上传区 */
+.dropzone {
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  padding: 14px;
+  text-align: center;
+  color: var(--muted);
+  cursor: pointer;
+}
+.dropzone.dragover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.filelink {
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.inputs-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  max-height: 96px;
+  overflow-y: auto;
+}
+.inputs-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0;
+  color: var(--muted);
+}

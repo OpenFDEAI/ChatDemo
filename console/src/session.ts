@@ -171,6 +171,31 @@ export class Session {
     await this.writeState({ ...current, adapter: name });
   }
 
+  /** 面板上传的材料落到 inputs/。文件名做穿越防护，同名覆盖。返回落盘名。 */
+  async saveInput(name: string, data: Buffer): Promise<string> {
+    let safe = path.basename(name.replace(/\\/g, '/')).trim();
+    if (!safe || safe === '.' || safe === '..') safe = 'file';
+    await fs.mkdir(this.file('inputs'), { recursive: true });
+    await fs.writeFile(path.join(this.file('inputs'), safe), data);
+    return safe;
+  }
+
+  /** inputs/ 现有材料清单（名字 + 字节数），供面板展示。 */
+  async listInputs(): Promise<Array<{ name: string; size: number }>> {
+    try {
+      const entries = await fs.readdir(this.file('inputs'), { withFileTypes: true });
+      const files = entries.filter((e) => e.isFile() && !e.name.startsWith('.'));
+      return Promise.all(
+        files.map(async (e) => {
+          const stat = await fs.stat(path.join(this.file('inputs'), e.name));
+          return { name: e.name, size: stat.size };
+        }),
+      );
+    } catch {
+      return [];
+    }
+  }
+
   async readSpec(): Promise<string> {
     try {
       return await fs.readFile(this.file(SPEC_FILE), 'utf8');

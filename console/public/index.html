@@ -16,8 +16,14 @@
 </header>
 
 <main class="columns">
-  <!-- 左列：录音 / 转写流 / 备注 / 生成回合 -->
+  <!-- 左列：材料 / 录音 / 转写流 / 备注 / 生成回合 -->
   <section class="col col-left">
+    <div class="card" id="inputs-card">
+      <h2>材料 inputs/ <span class="hint">截图、API 文档拖进来</span></h2>
+      <div id="dropzone" class="dropzone">拖拽文件到这里，或 <label class="filelink">点击选择<input id="file-input" type="file" multiple hidden></label></div>
+      <ul id="inputs-list" class="inputs-list mono small"></ul>
+    </div>
+
     <div class="card" id="record-card">
       <h2>录音</h2>
       <div class="rec-controls">
