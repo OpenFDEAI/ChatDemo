@@ -42,6 +42,11 @@
     <div class="card">
       <h2>本回合备注（可选）</h2>
       <textarea id="note" rows="2" placeholder="给本回合的补充指令，如「基于候选项目 X 改造」「先做大屏那页」"></textarea>
+      <div class="engine-row">
+        <label for="engine" class="muted small">引擎</label>
+        <select id="engine" title="回合驱动引擎，切换下一回合生效"></select>
+        <span id="engine-hint" class="muted small"></span>
+      </div>
       <button id="btn-turn" class="btn btn-accent btn-big">▶ 生成本回合</button>
       <div id="turn-status" class="muted small"></div>
       <div id="turn-log" class="turnlog mono"></div>

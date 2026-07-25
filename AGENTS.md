@@ -26,10 +26,11 @@ TRANSCRIPT.md / CANDIDATES.md / inputs/ / app/ / decisions.jsonl。
 把 `skills/fde-demo/` 目录与本文件拷到目标工作区根目录即可，SKILL.md 内
 所有引用均为相对路径、自包含。
 
-## 已知限制（Codex）
+## Codex 支持现状
 
-- `console/` 现场控制台的回合驱动目前只有 Claude Agent SDK 适配器
-  （`--adapter claude`）和 mock 适配器；Codex 适配器（走 `codex exec` 或
-  `@openai/codex-sdk`）尚未实现——接口已预留在
-  `console/src/turn.ts` 的 `AgentAdapter`。在 Codex 中请直接以对话回合制
-  使用本工作流（FDE 在停顿处输入要点）。
+- `console/` 现场控制台已支持 codex 引擎：`--adapter codex` 或在面板上
+  运行时切换（claude / codex / mock 三选一，回合协议 prompt 共享，切换
+  不丢上下文）。实现走 `codex exec --json` 子进程，已用 codex-cli 0.145.0
+  做过真机端到端回合验证；
+- 在 Codex TUI 中直接使用本工作流也可以：本文件即入口（FDE 在对话停顿处
+  输入要点，按 SKILL.md 回合协议执行）。

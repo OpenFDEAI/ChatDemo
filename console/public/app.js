@@ -17,6 +17,8 @@ const el = {
   manualInput: $('manual-input'),
   btnManual: $('btn-manual'),
   note: $('note'),
+  engine: $('engine'),
+  engineHint: $('engine-hint'),
   btnTurn: $('btn-turn'),
   turnStatus: $('turn-status'),
   turnLog: $('turn-log'),
@@ -78,9 +80,18 @@ function handleMessage(msg) {
       el.turnIndicator.classList.remove('hidden');
       el.turnIndicator.className = 'pill pill-busy';
       el.turnIndicator.textContent = `回合 #${msg.turnId} 运行中…`;
-      appendTurnLog('status', `—— 回合 #${msg.turnId} 开始（排队 ${msg.queued || 0}）——`);
+      appendTurnLog(
+        'status',
+        `—— 回合 #${msg.turnId} 开始（引擎 ${msg.adapter || '?'}，排队 ${msg.queued || 0}）——`,
+      );
       return;
     case 'turn-event': return handleTurnEvent(msg.turnId, msg.event);
+    case 'adapter-status':
+      if (!msg.ok) {
+        el.engineHint.textContent = msg.message || '切换失败';
+        el.engineHint.className = 'muted small err';
+      }
+      return;
     default:
       return;
   }
@@ -88,10 +99,36 @@ function handleMessage(msg) {
 
 /* ---------- 渲染 ---------- */
 
+const ENGINE_LABELS = { mock: 'Mock（演练）', claude: 'Claude Code', codex: 'Codex' };
+
+function renderEngines(active, engines) {
+  if (!engines) return;
+  const sig = JSON.stringify(engines);
+  if (el.engine.dataset.sig !== sig) {
+    el.engine.dataset.sig = sig;
+    el.engine.textContent = '';
+    for (const name of Object.keys(ENGINE_LABELS)) {
+      const info = engines[name];
+      if (!info) continue;
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = ENGINE_LABELS[name] + (info.available ? '' : '（不可用）');
+      opt.disabled = !info.available;
+      opt.title = info.detail || '';
+      el.engine.appendChild(opt);
+    }
+  }
+  if (document.activeElement !== el.engine) el.engine.value = active;
+  const info = engines[active];
+  el.engineHint.className = 'muted small';
+  el.engineHint.textContent = info && info.detail ? info.detail : '';
+}
+
 function renderState(msg) {
   state.demoUrl = msg.demoUrl;
   state.asrMode = msg.asr;
   el.demoUrl.textContent = msg.demoUrl;
+  renderEngines(msg.adapter, msg.engines);
   if (!el.demoFrame.src || el.demoFrame.src === 'about:blank') {
     el.demoFrame.src = msg.demoUrl;
   }
@@ -314,6 +351,12 @@ el.manualInput.addEventListener('keydown', (e) => {
 
 el.btnTurn.addEventListener('click', () => {
   send({ type: 'turn-start', note: el.note.value });
+});
+
+el.engine.addEventListener('change', () => {
+  el.engineHint.className = 'muted small';
+  el.engineHint.textContent = '切换中…（下一回合生效）';
+  send({ type: 'set-adapter', adapter: el.engine.value });
 });
 
 el.btnRefresh.addEventListener('click', refreshDemo);

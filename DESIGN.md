@@ -314,6 +314,36 @@ companion 当参考实现。`claudecodeui` 是 AGPL，只看模式不抄代码�
 | 不采用 | 手持采访麦 | ✗ | FDE 双手要操作控制台；手持麦制造「采访感」，破坏平等对话氛围；单通道无分离 |
 | 不采用 | 普通蓝牙耳机麦 | ✗ | 蓝牙 HFP 通话协议是窄带音质，ASR 错误率高。要点不是「蓝牙好不好」，是「是否以标准音频输入设备呈现」 |
 
+### 9.2 双引擎：claude / codex 运行时切换
+
+控制台的回合驱动支持两个引擎，**面板上运行时切换**（外加 mock 供演练与
+测试）。设计上有六个关键决策：
+
+1. **回合无状态是切换的前提**。两个引擎都是「每回合一个独立进程/会话」，
+   跨回合记忆不依赖引擎——状态全部在工作区文件（DEMO_SPEC / TRANSCRIPT /
+   CANDIDATES）。这是 spec-first 的架构红利：换引擎不丢上下文，甚至可以
+   一场会议中途换引擎（比如某家引擎当天限流）。
+2. **codex 驱动方式**：子进程 `codex exec --json --cd <工作区>
+   --sandbox workspace-write --skip-git-repo-check <回合prompt>`，解析
+   JSONL 事件流（`thread.started / item.completed / turn.completed`，
+   item 含 `agent_message / command_execution / file_change` 等，
+   2026-07 以 codex-cli 0.145.0 实测确认）映射为 TurnEvent。不引入
+   `@openai/codex-sdk` 依赖——CLI 即事实标准，SDK 本身也是包 CLI。
+3. **回合协议 prompt 两引擎共享**（`adapters/prompt.ts`）。协议是协议，
+   不是引擎特性；这也消化了「触发机制差异」——Claude Code 有 skill 自动
+   发现，codex 没有，所以控制台路径把回合协议完整写进 prompt，不依赖
+   任一引擎的 skill/AGENTS.md 机制（AGENTS.md 仅服务于 codex TUI 直用）。
+4. **切换机制**：server 持有引擎注册表 + `AdapterRouter`（委托适配器，
+   TurnRunner 零改动）；面板发 `{type:'set-adapter'}`，**当前回合不中断，
+   下一回合生效**；选择持久化进工作区 `.console-state.json`，重启记住。
+   CLI `--adapter` 退化为初始默认值。
+5. **可用性探测**：启动时并发探测（claude：尝试加载 Agent SDK；codex：
+   `codex --version` 子进程），结果随 state 消息下发；面板上不可用的引擎
+   置灰并显示原因，mock 永远可用（逃生通道不变）。
+6. **权限口径**：claude 用 `permissionMode: acceptEdits`；codex 用
+   `--sandbox workspace-write`（默认断网——npm install 类重活属于会前，
+   回合内只改文件，与 3 分钟预算纪律一致）。都不给 danger 级权限。
+
 ## 10. 与 FDE Loop 的战略咬合
 
 这个 skill 是 FDE Loop 的**采集入口**：

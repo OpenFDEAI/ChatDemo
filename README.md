@@ -51,16 +51,17 @@ codex   # AGENTS.md 会引导 Codex 加载 skills/fde-demo/SKILL.md 工作流
 # 截图用 -i 附带：codex -i 客户截图.png "为 <客户> 开一场 demo session"
 ```
 
-方法论、模板、摄取脚本与 Codex 完全通用（AGENTS.md 是 Codex 原生机制）；
-控制台的 Codex 适配器尚未实现，见 [AGENTS.md](AGENTS.md) 已知限制。
+方法论、模板、摄取脚本与 Codex 完全通用（AGENTS.md 是 Codex 原生机制）。
 
-**方式四：带现场控制台（录音 → 转写 → 一键回合）**
+**方式四：带现场控制台（录音 → 转写 → 一键回合，claude / codex 双引擎）**
 
 ```bash
 cd FDEDemo/console && npm install
 npm start -- --workspace ../examples/my-visit          # mock 模式，无需 API key
 npm start -- --workspace ../examples/my-visit --adapter claude --asr funasr
-# 打开 http://localhost:4321
+npm start -- --workspace ../examples/my-visit --adapter codex   # Codex 引擎
+# 打开 http://localhost:4321；面板上可在 claude / codex / mock 间运行时切换，
+# 回合协议共享、状态在工作区文件，切换不丢上下文（一场会议中途也能换引擎）
 ```
 
 ## 回合协议（工作流的核心）
@@ -87,8 +88,10 @@ npm start -- --workspace ../examples/my-visit --adapter claude --asr funasr
 
 ## 现状与路线（诚实版）
 
-- ✅ v0.1 skill 全量 + v0.2 控制台已实现；回归全绿（ingest 4/4、控制台 15/15、
+- ✅ v0.1 skill 全量 + v0.2 控制台已实现；回归全绿（ingest 4/4、控制台 22/22、
   模板 build ✓）；20 分钟模拟会议验收通过；
+- ✅ 双引擎：控制台支持 claude / codex 运行时切换（codex 链路已用
+  codex-cli 0.145.0 真机端到端验证：真实回合改动工作区文件并正常收尾）；
 - 🕓 待实测：控制台 `--adapter claude` 真机链路、FunASR 语音链路、
   画廊 refine/tremor/open-lovable 条目跑通；
 - 🔜 v0.3：画廊机制化、`decisions.jsonl` → FDE Loop（[OpenFDE](https://github.com/Open-FDE/OpenFDE)

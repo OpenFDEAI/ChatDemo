@@ -72,6 +72,8 @@ export interface TranscriptDelta {
 
 interface ConsoleState {
   consumedOffset: number;
+  /** 面板上最后选择的引擎（mock/claude/codex），重启后记住。 */
+  adapter?: string;
 }
 
 /** `YYYY-MM-DD HH:mm:ss` 本地时间戳。 */
@@ -136,7 +138,10 @@ export class Session {
       const raw = await fs.readFile(this.file(STATE_FILE), 'utf8');
       const parsed = JSON.parse(raw) as Partial<ConsoleState>;
       const offset = typeof parsed.consumedOffset === 'number' ? parsed.consumedOffset : 0;
-      return { consumedOffset: Math.max(0, offset) };
+      return {
+        consumedOffset: Math.max(0, offset),
+        ...(typeof parsed.adapter === 'string' ? { adapter: parsed.adapter } : {}),
+      };
     } catch {
       return { consumedOffset: 0 };
     }
@@ -154,9 +159,16 @@ export class Session {
     return { text: full.slice(from), endOffset: full.length };
   }
 
-  /** 回合成功后把书签推进到 endOffset 并持久化。 */
+  /** 回合成功后把书签推进到 endOffset 并持久化（保留其余状态字段）。 */
   async markConsumed(endOffset: number): Promise<void> {
-    await this.writeState({ consumedOffset: Math.max(0, endOffset) });
+    const current = await this.readState();
+    await this.writeState({ ...current, consumedOffset: Math.max(0, endOffset) });
+  }
+
+  /** 持久化面板上的引擎选择（保留书签）。 */
+  async saveAdapter(name: string): Promise<void> {
+    const current = await this.readState();
+    await this.writeState({ ...current, adapter: name });
   }
 
   async readSpec(): Promise<string> {

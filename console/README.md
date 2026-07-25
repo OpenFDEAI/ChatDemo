@@ -29,20 +29,29 @@ npm start -- --workspace ../../../../demos/acme-2026-07-25 \
 | `--workspace <path>` | （必填） | 本次拜访的会话工作区，一次拜访一个目录 |
 | `--demo-url <url>` | `http://localhost:3000` | Demo dev server 地址，回合完成后 iframe 自动刷新 |
 | `--port <n>` | `4321` | 控制台端口 |
-| `--adapter mock\|claude` | `mock` | 回合执行器，见下 |
+| `--adapter mock\|claude\|codex` | `mock` | 回合引擎**初始值**；面板上可运行时切换，选择持久化到工作区 |
 | `--asr none\|funasr` | `none` | 语音转写引擎，见下 |
 
-## 两种回合模式
+## 三种回合引擎（面板上可切换）
+
+回合协议 prompt 三者共享（`src/adapters/prompt.ts`）；引擎无状态、状态在
+工作区文件，所以**切换不丢上下文**——当前回合不中断，下一回合生效。启动时
+自动探测各引擎可用性，面板上不可用的引擎置灰并显示原因。
 
 **mock**（默认）：不调模型。把转写增量 + 备注的要点合并进 `DEMO_SPEC.md`
 的「页面清单」，在 `app/mock-changes.md` 追加占位变更，按 status → text →
 tool → summary → done 发事件。用于测试、离线演练、无 API key 的流程演示。
 
 **claude**：动态加载 `@anthropic-ai/claude-agent-sdk`，以工作区为 cwd 起
-Claude Code 回合，prompt 按 fde-demo 回合协议执行：读增量 → 先改
-DEMO_SPEC.md 再改代码 → 截图自检 → 输出一行总结。要求本机已认证
-Claude Code（运行过 `claude` 登录，或设置 `ANTHROPIC_API_KEY`）。SDK 缺失
-或未认证时面板会收到 error 事件与降级指引，不会崩。
+Claude Code 回合。要求本机已认证 Claude Code（运行过 `claude` 登录，或
+设置 `ANTHROPIC_API_KEY`）。SDK 缺失或未认证时面板会收到 error 事件与
+降级指引，不会崩。
+
+**codex**：子进程 `codex exec --json --cd <工作区> --sandbox workspace-write`，
+解析 JSONL 事件流（以 codex-cli 0.145.0 实测，含真机端到端回合验证）。
+要求本机已安装并登录 codex CLI（`npm install -g @openai/codex`）。沙箱内
+默认断网——npm install 类重活放会前做，回合内只改文件。
+`FDE_CODEX_BIN` 环境变量可覆盖 codex 可执行文件路径（测试用）。
 
 ## 语音转写（FunASR）
 

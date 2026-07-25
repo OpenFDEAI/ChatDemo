@@ -194,3 +194,25 @@ input[type="text"]:focus, textarea:focus { outline: none; border-color: var(--ac
   border: 1px solid var(--border);
   background: #fff;
 }
+
+/* 引擎切换（DESIGN.md §9.2） */
+.engine-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+.engine-row select {
+  background: var(--panel-2);
+  color: inherit;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font: inherit;
+}
+.engine-row select:focus {
+  outline: 1px solid var(--accent);
+}
+#engine-hint.err {
+  color: #e05c5c;
+}

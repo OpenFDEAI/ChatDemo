@@ -11,6 +11,7 @@
  *                     [--port 4321] [--adapter mock|claude] [--asr none|funasr]
  */
 
+import { spawn } from 'node:child_process';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
@@ -21,6 +22,8 @@ import { Session } from './session.js';
 import { TurnRunner, type AgentAdapter } from './turn.js';
 import { MockAdapter } from './adapters/mock.js';
 import { ClaudeAdapter } from './adapters/claude.js';
+import { CodexAdapter } from './adapters/codex.js';
+import { AdapterRouter } from './adapters/router.js';
 import { FunasrAsrAdapter } from './asr/funasr.js';
 
 const PUBLIC_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
@@ -34,12 +37,67 @@ const MIME: Record<string, string> = {
   '.ico': 'image/x-icon',
 };
 
+export type EngineName = 'mock' | 'claude' | 'codex';
+
 export interface ConsoleConfig {
   workspace: string;
   demoUrl: string;
   port: number;
-  adapter: 'mock' | 'claude';
+  adapter: EngineName;
   asr: 'none' | 'funasr';
+}
+
+export interface EngineStatus {
+  available: boolean;
+  detail: string;
+}
+
+/**
+ * 启动时并发探测引擎可用性（DESIGN.md §9.2⑤）：
+ * claude = 能否加载 Agent SDK；codex = `codex --version` 是否可执行。
+ * 探测的是「装没装」，不是「登没登录」——认证失败在回合内以 error 事件暴露。
+ */
+export async function probeEngines(): Promise<Record<EngineName, EngineStatus>> {
+  const claude = import('@anthropic-ai/claude-agent-sdk').then(
+    () => ({ available: true, detail: 'Agent SDK 已安装' }),
+    (err: unknown) => ({
+      available: false,
+      detail: `Agent SDK 加载失败：${err instanceof Error ? err.message.slice(0, 120) : String(err)}`,
+    }),
+  );
+  const codexBin = process.env.FDE_CODEX_BIN ?? 'codex';
+  const codex = new Promise<EngineStatus>((resolve) => {
+    const child = spawn(codexBin, ['--version'], { stdio: ['ignore', 'pipe', 'ignore'] });
+    let out = '';
+    const timer = setTimeout(() => {
+      child.kill();
+      resolve({ available: false, detail: 'codex --version 超时' });
+    }, 3000);
+    child.stdout.on('data', (c: Buffer) => {
+      out += c.toString();
+    });
+    child.on('error', (err) => {
+      clearTimeout(timer);
+      resolve({
+        available: false,
+        detail:
+          (err as NodeJS.ErrnoException).code === 'ENOENT'
+            ? `未找到 ${codexBin}（npm install -g @openai/codex）`
+            : err.message.slice(0, 120),
+      });
+    });
+    child.on('close', (code) => {
+      clearTimeout(timer);
+      if (code === 0) resolve({ available: true, detail: out.trim() || 'codex CLI 就绪' });
+      else resolve({ available: false, detail: `codex --version 退出码 ${code}` });
+    });
+  });
+  const [claudeStatus, codexStatus] = await Promise.all([claude, codex]);
+  return {
+    mock: { available: true, detail: '内置（演练/测试用）' },
+    claude: claudeStatus,
+    codex: codexStatus,
+  };
 }
 
 const USAGE = `用法：tsx src/server.ts --workspace <path> [选项]
@@ -47,7 +105,7 @@ const USAGE = `用法：tsx src/server.ts --workspace <path> [选项]
   --workspace <path>   必填。本次拜访的会话工作区（不存在则自动建骨架）
   --demo-url <url>     Demo dev server 地址（默认 http://localhost:3000）
   --port <n>           控制台端口（默认 4321）
-  --adapter <name>     mock | claude（默认 mock）
+  --adapter <name>     mock | claude | codex（默认 mock；面板上可运行时切换）
   --asr <name>         none | funasr（默认 none；funasr 连 ws://127.0.0.1:10096）
 `;
 
@@ -70,8 +128,8 @@ export function parseCliArgs(argv: string[]): ConsoleConfig {
     throw new Error(`--port 非法：${values.port}\n\n${USAGE}`);
   }
   const adapter = values.adapter ?? 'mock';
-  if (adapter !== 'mock' && adapter !== 'claude') {
-    throw new Error(`--adapter 只支持 mock | claude，收到：${adapter}\n\n${USAGE}`);
+  if (adapter !== 'mock' && adapter !== 'claude' && adapter !== 'codex') {
+    throw new Error(`--adapter 只支持 mock | claude | codex，收到：${adapter}\n\n${USAGE}`);
   }
   const asr = values.asr ?? 'none';
   if (asr !== 'none' && asr !== 'funasr') {
@@ -114,8 +172,20 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
   const session = new Session(config.workspace);
   await session.init();
 
-  const adapter: AgentAdapter = config.adapter === 'claude' ? new ClaudeAdapter() : new MockAdapter();
-  const runner = new TurnRunner(session, adapter);
+  // 引擎注册表 + 路由（DESIGN.md §9.2④）：切换在下一回合生效，TurnRunner 零改动。
+  const registry = new Map<string, AgentAdapter>([
+    ['mock', new MockAdapter()],
+    ['claude', new ClaudeAdapter()],
+    ['codex', new CodexAdapter()],
+  ]);
+  const engines = await probeEngines();
+  const persisted = (await session.readState()).adapter;
+  const initialAdapter: EngineName =
+    persisted && registry.has(persisted) && engines[persisted as EngineName]?.available
+      ? (persisted as EngineName)
+      : config.adapter;
+  const router = new AdapterRouter(registry, initialAdapter);
+  const runner = new TurnRunner(session, router);
 
   const server = createServer((req, res) => {
     void serveStatic(req, res);
@@ -139,7 +209,8 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
     return {
       type: 'state',
       demoUrl: config.demoUrl,
-      adapter: config.adapter,
+      adapter: router.active,
+      engines,
       asr: config.asr,
       spec,
       candidates,
@@ -206,8 +277,36 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
           const note = typeof msg.note === 'string' && msg.note.trim() ? msg.note : pendingNote;
           pendingNote = '';
           const { id, done } = runner.enqueue(note);
-          broadcast({ type: 'turn-start', turnId: id, queued: runner.queuedCount });
+          broadcast({
+            type: 'turn-start',
+            turnId: id,
+            queued: runner.queuedCount,
+            adapter: router.active,
+          });
           void done.then(() => broadcastState());
+          break;
+        }
+        case 'set-adapter': {
+          // 切换引擎（DESIGN.md §9.2④）：当前回合不中断，下一回合生效。
+          const name = typeof msg.adapter === 'string' ? msg.adapter : '';
+          if (!registry.has(name)) {
+            socket.send(
+              JSON.stringify({ type: 'adapter-status', ok: false, message: `未知引擎：${name}` }),
+            );
+            break;
+          }
+          if (!engines[name as EngineName]?.available) {
+            socket.send(
+              JSON.stringify({
+                type: 'adapter-status',
+                ok: false,
+                message: `引擎不可用：${engines[name as EngineName]?.detail ?? name}`,
+              }),
+            );
+            break;
+          }
+          router.set(name);
+          void session.saveAdapter(name).then(() => broadcastState());
           break;
         }
         case 'asr-start': {
@@ -266,7 +365,7 @@ async function main(): Promise<void> {
   面板     http://localhost:${config.port}
   工作区   ${config.workspace}
   Demo     ${config.demoUrl}
-  adapter  ${config.adapter}
+  adapter  ${config.adapter}（初始值；面板上可在 mock/claude/codex 间切换）
   asr      ${config.asr}${config.asr === 'funasr' ? '（连 ws://127.0.0.1:10096）' : '（录音置灰，手动输入可用）'}
 `);
 }
