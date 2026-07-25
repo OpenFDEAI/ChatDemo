@@ -250,3 +250,20 @@ input[type="text"]:focus, textarea:focus { outline: none; border-color: var(--ac
   padding: 2px 0;
   color: var(--muted);
 }
+
+/* 火山凭证配置 */
+.asr-creds {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.asr-creds input {
+  background: var(--panel-2);
+  color: inherit;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 5px 8px;
+  font: inherit;
+}
+.asr-creds.hidden { display: none; }

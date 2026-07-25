@@ -15,6 +15,10 @@ const el = {
   recTime: $('rec-time'),
   levelBar: $('level-bar'),
   asrReason: $('asr-reason'),
+  asrCreds: $('asr-creds'),
+  volcApp: $('volc-app'),
+  volcKey: $('volc-key'),
+  btnSaveCreds: $('btn-save-creds'),
   transcript: $('transcript'),
   partial: $('partial'),
   manualInput: $('manual-input'),
@@ -159,8 +163,18 @@ function renderState(msg) {
     el.turnIndicator.classList.add('hidden');
   }
   el.turnStatus.textContent = msg.turnQueued > 0 ? `排队中的回合：${msg.turnQueued}` : '';
-  if (msg.asr === 'funasr') {
-    state.asrEngine = 'funasr';
+  if (msg.asr === 'funasr' || msg.asr === 'volcano') {
+    state.asrEngine = 'server';
+    if (msg.asr === 'volcano' && !state.recording) {
+      const hasCreds = msg.volcCredentials === true;
+      el.asrCreds.classList.toggle('hidden', hasCreds);
+      if (!hasCreds) {
+        el.asrReason.textContent =
+          '火山引擎云端转写：首次使用请粘贴凭证（火山控制台 → 语音技术 → 流式语音识别大模型）。';
+      } else if (!el.asrReason.textContent) {
+        el.asrReason.textContent = '火山引擎云端转写就绪，点 ● 开始。';
+      }
+    }
   } else if (!state.recording) {
     const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (Rec) {
@@ -200,12 +214,18 @@ function renderAsrStatus(msg) {
   if (msg.status === 'ready') {
     state.asrAvailable = true;
     el.recordCard.classList.remove('disabled');
-    el.asrReason.textContent = 'FunASR 已连接（本地转写，不上云）';
+    el.asrReason.textContent = msg.detail || 'FunASR 已连接（本地转写，不上云）';
   } else if (msg.status === 'asr-unavailable') {
     setAsrUnavailable(msg.detail || 'ASR 不可用');
     stopRecordingUi();
   } else if (msg.status === 'stopped') {
-    el.asrReason.textContent = 'ASR 已停止';
+    el.asrReason.textContent = msg.detail || 'ASR 已停止';
+    if (msg.detail && msg.detail.includes('已保存')) {
+      // 凭证保存成功：解除置灰、收起表单，等用户点 ● 重试。
+      el.recordCard.classList.remove('disabled');
+      el.asrCreds.classList.add('hidden');
+      el.volcKey.value = '';
+    }
   }
 }
 
@@ -411,6 +431,10 @@ function stopRecording() {
 el.btnRecord.addEventListener('click', () => {
   if (state.recording) stopRecording();
   else void startRecording();
+});
+
+el.btnSaveCreds.addEventListener('click', () => {
+  send({ type: 'asr-credentials', appKey: el.volcApp.value, accessKey: el.volcKey.value });
 });
 
 el.btnPause.addEventListener('click', () => {

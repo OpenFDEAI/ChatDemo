@@ -28,7 +28,7 @@ const USAGE = `用法：fde-demo [选项]（在拜访工作区目录里直接运
 
   --workspace <path>   工作区目录（默认：当前目录）
   --adapter <name>     mock | claude | codex（默认：自动选择可用引擎）
-  --asr <name>         none | funasr（默认 none）
+  --asr <name>         none | volcano | funasr（默认 none；volcano=火山云端转写）
   --port <n>           控制台端口起点（默认 4321，被占用自动 +1）
   --demo-port <n>      Demo 端口起点（默认 3000，被占用自动 +1）
   --no-open            不自动打开浏览器
@@ -172,7 +172,7 @@ async function main(): Promise<void> {
     adapter = engines.claude.available ? 'claude' : engines.codex.available ? 'codex' : 'mock';
     console.log(`[fde-demo] 引擎自动选择：${adapter}（面板上可随时切换）`);
   }
-  const asr = values.asr === 'funasr' ? 'funasr' : 'none';
+  const asr = values.asr === 'funasr' ? 'funasr' : values.asr === 'volcano' ? 'volcano' : 'none';
 
   const consolePort = await findFreePort(Number.parseInt(values.port ?? '4321', 10));
   await startConsole({ workspace, demoUrl, port: consolePort, adapter, asr });

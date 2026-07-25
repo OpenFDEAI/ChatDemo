@@ -25,6 +25,8 @@ import { ClaudeAdapter } from './adapters/claude.js';
 import { CodexAdapter } from './adapters/codex.js';
 import { AdapterRouter } from './adapters/router.js';
 import { FunasrAsrAdapter } from './asr/funasr.js';
+import { VolcanoAsrAdapter, credentialsPath } from './asr/volcano.js';
+import type { AsrAdapter, AudioSink, StatusSource } from './asr/types.js';
 
 const PUBLIC_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
 
@@ -44,7 +46,7 @@ export interface ConsoleConfig {
   demoUrl: string;
   port: number;
   adapter: EngineName;
-  asr: 'none' | 'funasr';
+  asr: 'none' | 'funasr' | 'volcano';
 }
 
 export interface EngineStatus {
@@ -106,7 +108,9 @@ const USAGE = `用法：tsx src/server.ts --workspace <path> [选项]
   --demo-url <url>     Demo dev server 地址（默认 http://localhost:3000）
   --port <n>           控制台端口（默认 4321）
   --adapter <name>     mock | claude | codex（默认 mock；面板上可运行时切换）
-  --asr <name>         none | funasr（默认 none；funasr 连 ws://127.0.0.1:10096）
+  --asr <name>         none | volcano | funasr（默认 none。volcano=火山引擎云端
+                       转写，需 VOLC_ASR_APP_KEY/VOLC_ASR_ACCESS_KEY；funasr=
+                       本地转写，连 ws://127.0.0.1:10096）
 `;
 
 export function parseCliArgs(argv: string[]): ConsoleConfig {
@@ -132,8 +136,8 @@ export function parseCliArgs(argv: string[]): ConsoleConfig {
     throw new Error(`--adapter 只支持 mock | claude | codex，收到：${adapter}\n\n${USAGE}`);
   }
   const asr = values.asr ?? 'none';
-  if (asr !== 'none' && asr !== 'funasr') {
-    throw new Error(`--asr 只支持 none | funasr，收到：${asr}\n\n${USAGE}`);
+  if (asr !== 'none' && asr !== 'funasr' && asr !== 'volcano') {
+    throw new Error(`--asr 只支持 none | volcano | funasr，收到：${asr}\n\n${USAGE}`);
   }
   return {
     workspace: path.resolve(values.workspace),
@@ -249,6 +253,7 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
       adapter: router.active,
       engines,
       asr: config.asr,
+      volcCredentials: config.asr === 'volcano' ? new VolcanoAsrAdapter().hasCredentials() : null,
       spec,
       candidates,
       inputs,
@@ -265,20 +270,21 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
     broadcast({ type: 'turn-event', turnId, event });
   });
 
-  // --- ASR 装配（懒连接：第一次 asr-start 才去连 FunASR） ---
-  let funasr: FunasrAsrAdapter | null = null;
-  const ensureFunasr = (): FunasrAsrAdapter => {
-    if (!funasr) {
-      funasr = new FunasrAsrAdapter();
-      funasr.onPartial((text) => broadcast({ type: 'asr-partial', text }));
-      funasr.onFinal((text) => {
+  // --- ASR 装配（懒连接：第一次 asr-start 才去连后端） ---
+  type ServerAsr = AsrAdapter & AudioSink & StatusSource;
+  let serverAsr: ServerAsr | null = null;
+  const ensureAsr = (): ServerAsr => {
+    if (!serverAsr) {
+      serverAsr = config.asr === 'volcano' ? new VolcanoAsrAdapter() : new FunasrAsrAdapter();
+      serverAsr.onPartial((text) => broadcast({ type: 'asr-partial', text }));
+      serverAsr.onFinal((text) => {
         void session.appendTranscript(text).then(() => broadcastState());
       });
-      funasr.onStatus((status, detail) => {
+      serverAsr.onStatus((status, detail) => {
         broadcast({ type: 'asr-status', status, ...(detail ? { detail } : {}) });
       });
     }
-    return funasr;
+    return serverAsr;
   };
 
   wss.on('connection', (socket: WebSocket) => {
@@ -287,9 +293,9 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
 
     socket.on('message', (data, isBinary) => {
       if (isBinary) {
-        // 音频二进制帧 → FunASR
-        if (config.asr === 'funasr' && funasr) {
-          funasr.pushAudio(data as Buffer);
+        // 音频二进制帧 → 服务端 ASR（FunASR / 火山）
+        if (config.asr !== 'none' && serverAsr) {
+          serverAsr.pushAudio(data as Buffer);
         }
         return;
       }
@@ -348,21 +354,66 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
           break;
         }
         case 'asr-start': {
-          if (config.asr !== 'funasr') {
+          if (config.asr === 'none') {
             socket.send(
               JSON.stringify({
                 type: 'asr-status',
                 status: 'asr-unavailable',
-                detail: '服务端未启用 ASR（--asr none）。请用手动输入，或以 --asr funasr 重启控制台。',
+                detail:
+                  '服务端未启用 ASR（--asr none）。请用手动输入，或以 --asr volcano（云端）/ --asr funasr（本地）重启控制台。',
               }),
             );
             break;
           }
-          void ensureFunasr().start();
+          void ensureAsr().start();
           break;
         }
         case 'asr-stop': {
-          funasr?.stop();
+          serverAsr?.stop();
+          break;
+        }
+        case 'asr-credentials': {
+          // 面板粘贴火山凭证 → ~/.fde-demo/credentials.json（0600，不进仓库）。
+          const appKey = typeof msg.appKey === 'string' ? msg.appKey.trim() : '';
+          const accessKey = typeof msg.accessKey === 'string' ? msg.accessKey.trim() : '';
+          if (!appKey || !accessKey) {
+            socket.send(
+              JSON.stringify({
+                type: 'asr-status',
+                status: 'asr-unavailable',
+                detail: 'APP ID 与 Access Token 都不能为空。',
+              }),
+            );
+            break;
+          }
+          const file = credentialsPath();
+          void fs
+            .mkdir(path.dirname(file), { recursive: true })
+            .then(() =>
+              fs.writeFile(
+                file,
+                `${JSON.stringify({ volcAsrAppKey: appKey, volcAsrAccessKey: accessKey }, null, 2)}\n`,
+                { mode: 0o600 },
+              ),
+            )
+            .then(async () => {
+              serverAsr = null; // 下次 asr-start 用新凭证重建
+              broadcast({
+                type: 'asr-status',
+                status: 'stopped',
+                detail: '火山凭证已保存（~/.fde-demo/credentials.json），点 ● 开始录音。',
+              });
+              await broadcastState();
+            })
+            .catch((err: unknown) => {
+              socket.send(
+                JSON.stringify({
+                  type: 'asr-status',
+                  status: 'asr-unavailable',
+                  detail: `凭证保存失败：${err instanceof Error ? err.message : String(err)}`,
+                }),
+              );
+            });
           break;
         }
         case 'refresh-state': {
@@ -380,7 +431,7 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
   return {
     server,
     close: async () => {
-      funasr?.stop();
+      serverAsr?.stop();
       for (const client of wss.clients) client.terminate();
       await new Promise<void>((resolve, reject) =>
         server.close((err) => (err ? reject(err) : resolve())),
@@ -404,7 +455,13 @@ async function main(): Promise<void> {
   工作区   ${config.workspace}
   Demo     ${config.demoUrl}
   adapter  ${config.adapter}（初始值；面板上可在 mock/claude/codex 间切换）
-  asr      ${config.asr}${config.asr === 'funasr' ? '（连 ws://127.0.0.1:10096）' : '（录音置灰，手动输入可用）'}
+  asr      ${config.asr}${
+    config.asr === 'funasr'
+      ? '（本地 FunASR，连 ws://127.0.0.1:10096）'
+      : config.asr === 'volcano'
+        ? '（火山引擎云端转写；凭证缺失时面板可粘贴）'
+        : '（浏览器识别测试模式可用，手动输入始终可用）'
+  }
 `);
 }
 

@@ -53,14 +53,22 @@ Claude Code 回合。要求本机已认证 Claude Code（运行过 `claude` 登�
 默认断网——npm install 类重活放会前做，回合内只改文件。
 `FDE_CODEX_BIN` 环境变量可覆盖 codex 可执行文件路径（测试用）。
 
-## 语音转写
+## 语音转写（三种模式）
 
-**测试模式（零安装）**：未启用 `--asr funasr` 时，若浏览器支持
-SpeechRecognition（Chrome/Edge/Safari），录音卡片自动进入「浏览器识别」
-模式——点 ● 即可录音转写。**仅供测试**：识别由浏览器提供、可能经厂商
-云端；客户现场必须用下面的 FunASR 本地转写（红线：客户对话不上云）。
+**volcano（推荐，云端）**：火山引擎大模型流式识别
+（`wss://openspeech.bytedance.com/api/v3/sauc/bigmodel`），中文质量最好，
+带标点与 ITN。凭证两种给法：面板录音卡片里粘贴 APP ID + Access Token
+（存 `~/.fde-demo/credentials.json`，0600，不进仓库），或环境变量
+`VOLC_ASR_APP_KEY` / `VOLC_ASR_ACCESS_KEY`（可选 `VOLC_ASR_RESOURCE_ID`，
+默认 `volc.bigasr.sauc.duration`）。开通入口：火山引擎控制台 → 语音技术 →
+流式语音识别大模型。上云为刻意选择（Plaud / 飞书妙记同为云端路径）；
+录音须会前告知客户的红线不变。
 
-## 本地转写（FunASR，客户现场用）
+**测试模式（零安装，浏览器识别）**：`--asr none` 时若浏览器支持
+SpeechRecognition，录音卡片自动进入浏览器识别模式，点 ● 即可用。
+识别由浏览器提供，质量与稳定性一般，仅供流程测试。
+
+## 本地转写（FunASR，数据敏感客户用）
 
 `--asr funasr` 时控制台连接本地 FunASR runtime（`ws://127.0.0.1:10096`，
 2pass 双通道协议：online 实时 partial + offline 二遍精修 final）。
