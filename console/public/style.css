@@ -176,14 +176,14 @@ body { display: flex; flex-direction: column; }
 .filelink { color: var(--accent); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 
 .rec-row { display: flex; align-items: center; gap: 12px; flex: 0 0 auto; }
-.rec-row .rec-time { margin-left: auto; }
+.rec-row .rec-big { margin-left: auto; }
 .rec-big {
   flex: 0 0 auto;
   border: none;
-  border-radius: 999px;
-  padding: 12px 16px;
+  border-radius: var(--r-md);
+  padding: 7px 16px;
   font: inherit;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: .02em;
   background: var(--accent);
@@ -191,7 +191,6 @@ body { display: flex; flex-direction: column; }
   cursor: pointer;
   transition: transform .1s, background .15s, box-shadow .15s;
 }
-.rec-big { padding: 10px 22px; }
 .rec-big:hover { background: #f26a0d; transform: translateY(-1px); }
 .rec-big:active { transform: translateY(0); }
 #record-card.recording .rec-big {
