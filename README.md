@@ -1,6 +1,6 @@
-# FDEDemo — 边聊边出 Demo
+# FDE chat2demo — 聊出 Demo
 
-**Build the demo while you talk. An on-site demo workflow for Forward Deployed Engineers, running inside Claude Code.**
+**chat2demo: the demo builds while you talk. An on-site workflow for Forward Deployed Engineers, powered by Claude Code & Codex.**
 
 FDE 坐在客户对面，边聊需求边让 Demo 逐步成形：客户的截图和 API 丢进去，
 对话的每个停顿处按一下「生成」，3 分钟内一个可见的界面增量。客户当场看到

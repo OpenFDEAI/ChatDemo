@@ -1,4 +1,4 @@
-# FDE 现场控制台（@openfde/fde-demo-console）
+# FDE chat2demo 面板（@openfde/fde-demo-console）
 
 fde-demo skill 的薄交互层（DESIGN.md §9）：**skill 是大脑，控制台是脸**。
 给 FDE 在客户现场用的本地工具：录音 → 本地转写 → 一键触发 Claude Code 回合 → 自动刷新 Demo。
