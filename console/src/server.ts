@@ -344,8 +344,31 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
     return serverAsr;
   };
 
+  // 回合启动 + 完成后落账（连接无关，抽出便于 turn-start 复用）。
+  const startTurn = (engine: string): void => {
+    const { id, done } = runner.enqueue();
+    tlog(`[回合#${id}]`, `—— 开始（引擎 ${engine}，排队 ${runner.queuedCount}）——`);
+    broadcast({ type: 'turn-start', turnId: id, queued: runner.queuedCount, adapter: engine });
+    void done.then(async (result) => {
+      const summary = result.events.find(
+        (e): e is Extract<typeof e, { type: 'summary' }> => e.type === 'summary',
+      );
+      const error = result.events.find(
+        (e): e is Extract<typeof e, { type: 'error' }> => e.type === 'error',
+      );
+      await session.appendJournal({
+        id: result.id,
+        adapter: engine,
+        delta: result.input?.transcriptDelta ?? '',
+        ok: result.ok,
+        ...(summary ? { summary: summary.summary } : {}),
+        ...(error ? { error: error.message } : {}),
+      });
+      await broadcastState();
+    });
+  };
+
   wss.on('connection', (socket: WebSocket) => {
-    let pendingNote = '';
     void stateMessage().then((msg) => socket.send(JSON.stringify(msg)));
 
     socket.on('message', (data, isBinary) => {
@@ -371,36 +394,22 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
           }
           break;
         }
-        case 'note': {
-          pendingNote = typeof msg.text === 'string' ? msg.text : '';
-          break;
-        }
         case 'turn-start': {
-          const note = typeof msg.note === 'string' && msg.note.trim() ? msg.note : pendingNote;
-          pendingNote = '';
+          // 「输入 Demo 描述」与手动要点已合并为单通道：描述先作为要点写入
+          // 转写流、再开回合（必须先 await 落盘，否则回合读增量会漏掉这句）。
+          const description =
+            typeof msg.description === 'string' && msg.description.trim()
+              ? msg.description.trim()
+              : '';
           const engine = router.active;
-          const { id, done } = runner.enqueue(note);
-          tlog(`[回合#${id}]`, `—— 开始（引擎 ${engine}，排队 ${runner.queuedCount}）——`);
-          broadcast({ type: 'turn-start', turnId: id, queued: runner.queuedCount, adapter: engine });
-          void done.then(async (result) => {
-            // 回合落账：输入→输出进 SESSION.md，面板「回合记录」卡片渲染。
-            const summary = result.events.find(
-              (e): e is Extract<typeof e, { type: 'summary' }> => e.type === 'summary',
-            );
-            const error = result.events.find(
-              (e): e is Extract<typeof e, { type: 'error' }> => e.type === 'error',
-            );
-            await session.appendJournal({
-              id: result.id,
-              adapter: engine,
-              delta: result.input?.transcriptDelta ?? '',
-              ...(result.input?.note ? { note: result.input.note } : {}),
-              ok: result.ok,
-              ...(summary ? { summary: summary.summary } : {}),
-              ...(error ? { error: error.message } : {}),
-            });
-            await broadcastState();
-          });
+          void (async () => {
+            if (description) {
+              tlog('[转写]', `${description}（Demo 描述）`);
+              await session.appendTranscript(description);
+              await broadcastState();
+            }
+            startTurn(engine);
+          })();
           break;
         }
         case 'set-adapter': {

@@ -21,8 +21,6 @@ const el = {
   btnSaveCreds: $('btn-save-creds'),
   transcript: $('transcript'),
   partial: $('partial'),
-  manualInput: $('manual-input'),
-  btnManual: $('btn-manual'),
   note: $('note'),
   engine: $('engine'),
   engineHint: $('engine-hint'),
@@ -480,19 +478,9 @@ el.btnPause.addEventListener('click', () => {
   }
 });
 
-function sendManual() {
-  const text = el.manualInput.value.trim();
-  if (!text) return;
-  send({ type: 'transcript', text });
-  el.manualInput.value = '';
-}
-el.btnManual.addEventListener('click', sendManual);
-el.manualInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') sendManual();
-});
-
 el.btnTurn.addEventListener('click', () => {
-  send({ type: 'turn-start', note: el.note.value });
+  send({ type: 'turn-start', description: el.note.value });
+  el.note.value = ''; // 描述已计入转写流（面板与 TRANSCRIPT.md 可见），即刻清空
 });
 
 el.engine.addEventListener('change', () => {
