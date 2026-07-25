@@ -67,20 +67,22 @@
       <div id="turn-status" class="muted small"></div>
     </div>
 
-    <div class="card card-grow" id="journal-card">
-      <h2>回合记录 <span class="hint">输入 → 输出账本（SESSION.md）· 运行中实时日志</span></h2>
-      <div id="journal" class="md journal"></div>
-      <div id="turn-log" class="turnlog mono"></div>
+    <div class="card card-grow hidden" id="candidates-card">
+      <h2>开源候选 <span class="hint">聊出新需求时，agent 搜到的可复用开源项目会列在这里，选一个基于它改</span></h2>
+      <div id="candidates" class="md"></div>
     </div>
+  </section>
 
+  <!-- 中列：按需弹出（顶栏 ▤ Spec / ▥ 记录 开关控制），默认隐藏 -->
+  <section class="col col-mid hidden" id="mid-col">
     <div class="card card-grow hidden" id="spec-card">
       <h2>DEMO_SPEC.md <span class="hint">单一事实源（投屏区）</span></h2>
       <div id="spec" class="md spec-scroll"></div>
     </div>
-
-    <div class="card card-grow hidden" id="candidates-card">
-      <h2>开源候选 <span class="hint">聊出新需求时，agent 搜到的可复用开源项目会列在这里，选一个基于它改</span></h2>
-      <div id="candidates" class="md"></div>
+    <div class="card card-grow hidden" id="journal-card">
+      <h2>回合记录 <span class="hint">输入 → 输出账本（SESSION.md）· 运行中实时日志</span></h2>
+      <div id="journal" class="md journal"></div>
+      <div id="turn-log" class="turnlog mono"></div>
     </div>
   </section>
 

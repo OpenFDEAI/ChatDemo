@@ -31,6 +31,7 @@ const el = {
   turnLog: $('turn-log'),
   spec: $('spec'),
   specCard: $('spec-card'),
+  midCol: $('mid-col'),
   toggleSpec: $('toggle-spec'),
   toggleJournal: $('toggle-journal'),
   journal: $('journal'),
@@ -192,8 +193,8 @@ function renderState(msg) {
       if (!hasCreds) {
         el.asrReason.textContent =
           '火山引擎云端转写：首次使用请粘贴凭证（火山控制台 → 语音技术 → 流式语音识别大模型）。';
-      } else if (!el.asrReason.textContent) {
-        el.asrReason.textContent = '火山引擎云端转写就绪，点 ● 开始。';
+      } else if (el.asrReason.textContent.includes('就绪')) {
+        el.asrReason.textContent = '';
       }
     }
   } else if (!state.recording) {
@@ -548,10 +549,14 @@ function setPanel(name, on) {
   card.classList.toggle('hidden', !on);
   btn.classList.toggle('active', on);
   localStorage.setItem(`panel.${name}`, on ? '1' : '0');
+  // 任一面板开启 → 弹出中列（转写流与 Demo 之间）；全关 → 回到双列大预览
+  const anyOn = !el.specCard.classList.contains('hidden') || !el.journalCard.classList.contains('hidden');
+  el.midCol.classList.toggle('hidden', !anyOn);
+  document.querySelector('.columns').classList.toggle('has-mid', anyOn);
 }
 el.toggleSpec.addEventListener('click', () => setPanel('spec', el.specCard.classList.contains('hidden')));
 el.toggleJournal.addEventListener('click', () => setPanel('journal', el.journalCard.classList.contains('hidden')));
 setPanel('spec', localStorage.getItem('panel.spec') === '1');
-setPanel('journal', localStorage.getItem('panel.journal') !== '0');
+setPanel('journal', localStorage.getItem('panel.journal') === '1');
 
 connect();
