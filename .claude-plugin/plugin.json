@@ -1,0 +1,9 @@
+{
+  "name": "fde-demo",
+  "version": "0.1.0",
+  "description": "Build a customer demo live while the FDE talks with the customer on-site: turn-based workflow (spec-first, reuse > assemble > generate, 3-minute turns with screenshot self-check), branded Next.js demo template, OpenAPI-to-mock ingestion, and a pre-vetted OSS gallery.",
+  "author": {
+    "name": "OpenFDE",
+    "url": "https://github.com/OpenFDEAI"
+  }
+}

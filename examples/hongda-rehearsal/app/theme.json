@@ -1,0 +1,21 @@
+{
+  "brand": {
+    "name": "宏达机械 · 售后服务中心",
+    "logoText": "宏达",
+    "primary": "#1e7d46",
+    "accent": "#b45309",
+    "radius": "6px"
+  },
+  "terms": {
+    "workspace": "报修派工中心",
+    "id": "报修单号",
+    "item": "报修单",
+    "title": "机型 / 故障码",
+    "priority": "优先级",
+    "sla": "响应时限",
+    "owner": "责任工程师",
+    "status": "单据状态",
+    "createdAt": "报修时间",
+    "dueAt": "承诺时限"
+  }
+}

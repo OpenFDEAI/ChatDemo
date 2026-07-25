@@ -1,0 +1,185 @@
+{
+  "GET /repair-orders": [
+    {
+      "orderNo": "BX-20260718-031",
+      "machineModel": "HD-210 数控车床",
+      "faultCode": "E117 伺服报警",
+      "customerName": "张伟",
+      "region": "华东区",
+      "reportedAt": "2026-07-20T02:30:00Z",
+      "slaDeadline": "2026-07-17T07:30:00Z",
+      "engineerName": "张伟",
+      "status": "待派工"
+    },
+    {
+      "orderNo": "BX-20260718-031",
+      "machineModel": "HD-500 龙门铣",
+      "faultCode": "E009 系统死机",
+      "customerName": "杨帆",
+      "region": "华南区",
+      "reportedAt": "2026-07-01T05:30:00Z",
+      "slaDeadline": "2026-07-05T00:30:00Z",
+      "engineerName": "杨帆",
+      "status": "待派工"
+    },
+    {
+      "orderNo": "BX-20260718-031",
+      "machineModel": "HD-500 龙门铣",
+      "faultCode": "E301 冷却液泄漏",
+      "customerName": "刘洋",
+      "region": "西南区",
+      "reportedAt": "2026-07-05T05:30:00Z",
+      "slaDeadline": "2026-07-16T06:30:00Z",
+      "engineerName": "王强",
+      "status": "待派工"
+    },
+    {
+      "orderNo": "BX-20260718-031",
+      "machineModel": "HD-210 数控车床",
+      "faultCode": "E009 系统死机",
+      "customerName": "张伟",
+      "region": "华南区",
+      "reportedAt": "2026-07-26T00:30:00Z",
+      "slaDeadline": "2026-07-22T08:30:00Z",
+      "engineerName": "陈静",
+      "status": "待派工"
+    },
+    {
+      "orderNo": "BX-20260718-031",
+      "machineModel": "HD-380 立式加工中心",
+      "faultCode": "E009 系统死机",
+      "customerName": "杨帆",
+      "region": "西南区",
+      "reportedAt": "2026-07-02T00:30:00Z",
+      "slaDeadline": "2026-07-15T07:30:00Z",
+      "engineerName": "赵磊",
+      "status": "待派工"
+    },
+    {
+      "orderNo": "BX-20260718-031",
+      "machineModel": "HD-210 数控车床",
+      "faultCode": "E301 冷却液泄漏",
+      "customerName": "刘洋",
+      "region": "华南区",
+      "reportedAt": "2026-07-24T08:30:00Z",
+      "slaDeadline": "2026-07-13T03:30:00Z",
+      "engineerName": "杨帆",
+      "status": "维修中"
+    },
+    {
+      "orderNo": "BX-20260718-031",
+      "machineModel": "HD-380 立式加工中心",
+      "faultCode": "E204 主轴异响",
+      "customerName": "张伟",
+      "region": "华北区",
+      "reportedAt": "2026-07-16T08:30:00Z",
+      "slaDeadline": "2026-07-27T08:30:00Z",
+      "engineerName": "杨帆",
+      "status": "维修中"
+    },
+    {
+      "orderNo": "BX-20260718-031",
+      "machineModel": "HD-380 立式加工中心",
+      "faultCode": "E009 系统死机",
+      "customerName": "王强",
+      "region": "华北区",
+      "reportedAt": "2026-07-10T08:30:00Z",
+      "slaDeadline": "2026-07-07T06:30:00Z",
+      "engineerName": "李娜",
+      "status": "维修中"
+    }
+  ],
+  "GET /repair-orders/{id}": {
+    "orderNo": "BX-20260718-031",
+    "machineModel": "HD-500 龙门铣",
+    "faultCode": "E117 伺服报警",
+    "customerName": "张伟",
+    "region": "西南区",
+    "reportedAt": "2026-07-16T08:30:00Z",
+    "slaDeadline": "2026-07-01T08:30:00Z",
+    "engineerName": "孙悦",
+    "status": "维修中"
+  },
+  "GET /engineers": [
+    {
+      "engineerName": "李娜",
+      "region": "华南区",
+      "skills": [
+        "华南0]",
+        "常规1]",
+        "加急2]"
+      ],
+      "activeCount": 3
+    },
+    {
+      "engineerName": "刘洋",
+      "region": "华南区",
+      "skills": [
+        "标准0]",
+        "华东1]",
+        "华北2]"
+      ],
+      "activeCount": 3
+    },
+    {
+      "engineerName": "李娜",
+      "region": "华南区",
+      "skills": [
+        "华北0]",
+        "标准1]",
+        "华北2]"
+      ],
+      "activeCount": 3
+    },
+    {
+      "engineerName": "孙悦",
+      "region": "华北区",
+      "skills": [
+        "华东0]",
+        "华东1]",
+        "西南2]"
+      ],
+      "activeCount": 3
+    },
+    {
+      "engineerName": "刘洋",
+      "region": "华北区",
+      "skills": [
+        "常规0]",
+        "华北1]",
+        "华北2]"
+      ],
+      "activeCount": 3
+    },
+    {
+      "engineerName": "孙悦",
+      "region": "华南区",
+      "skills": [
+        "标准0]",
+        "加急1]",
+        "标准2]"
+      ],
+      "activeCount": 3
+    },
+    {
+      "engineerName": "杨帆",
+      "region": "华东区",
+      "skills": [
+        "标准0]",
+        "常规1]",
+        "加急2]"
+      ],
+      "activeCount": 3
+    },
+    {
+      "engineerName": "王强",
+      "region": "华北区",
+      "skills": [
+        "华南0]",
+        "标准1]",
+        "加急2]"
+      ],
+      "activeCount": 3
+    }
+  ]
+}

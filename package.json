@@ -1,0 +1,23 @@
+{
+  "name": "fde-demo",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Build the demo while you talk — on-site demo workflow for Forward Deployed Engineers.",
+  "type": "module",
+  "scripts": {
+    "test": "node --import tsx --test skills/fde-demo/test/*.test.ts",
+    "ingest": "tsx skills/fde-demo/scripts/ingest-api.ts"
+  },
+  "dependencies": {
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}

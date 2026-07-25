@@ -1,0 +1,26 @@
+{
+  "name": "@openfde/fde-demo-console",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "FDE 现场控制台：录音→转写→一键触发 Claude Code 回合→自动刷新 Demo（fde-demo skill 的薄交互层）",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "tsc --noEmit && node --import tsx --test test/*.test.ts"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.219",
+    "ws": "^8.21.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.23.1",
+    "typescript": "^7.0.2"
+  }
+}

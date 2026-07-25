@@ -1,0 +1,28 @@
+{
+  "GET /orders": {
+    "total": 2,
+    "items": [
+      {
+        "orderNo": "SO-20260721-001",
+        "customer": "华东经销一部",
+        "amount": 128000,
+        "status": "已发货"
+      },
+      {
+        "orderNo": "SO-20260722-002",
+        "customer": "西南直营中心",
+        "amount": 56600,
+        "status": "待出库"
+      }
+    ]
+  },
+  "GET /me": {
+    "name": "赵一鸣",
+    "role": "agent",
+    "dept": "设备运维部"
+  },
+  "GET /orders/{id}": {
+    "id": "ORD-1001",
+    "status": "active"
+  }
+}

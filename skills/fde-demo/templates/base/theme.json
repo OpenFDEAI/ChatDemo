@@ -1,0 +1,21 @@
+{
+  "brand": {
+    "name": "宏川智造",
+    "logoText": "宏川",
+    "primary": "#c2410c",
+    "accent": "#0f766e",
+    "radius": "6px"
+  },
+  "terms": {
+    "workspace": "设备运维工单中心",
+    "item": "工单",
+    "id": "工单号",
+    "title": "标题",
+    "priority": "优先级",
+    "sla": "SLA 时限",
+    "owner": "负责人",
+    "status": "状态",
+    "createdAt": "创建时间",
+    "dueAt": "截止时间"
+  }
+}

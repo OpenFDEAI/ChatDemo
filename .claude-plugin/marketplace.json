@@ -1,0 +1,14 @@
+{
+  "name": "openfde",
+  "owner": {
+    "name": "OpenFDE",
+    "url": "https://github.com/OpenFDEAI"
+  },
+  "plugins": [
+    {
+      "name": "fde-demo",
+      "source": "./",
+      "description": "边聊边出 Demo：FDE 现场工作流（spec-first 回合制 + 品牌化模板 + OpenAPI mock 摄取 + 预验证开源画廊）"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+/*
+ * Neutral industrial base palette (near-black on off-white).
+ * Brand variables (--brand-*) are injected by app/layout.tsx from theme.json;
+ * the values below are only fallbacks. Components must reference CSS vars,
+ * never hard-coded brand colors.
+ */
+:root {
+  --bg: #f4f3f0;
+  --fg: #1a1b1e;
+  --panel: #ffffff;
+  --panel-dark: #1a1b1e;
+  --border: #e2e0da;
+  --muted: #74747c;
+  --brand-primary: #b45309;
+  --brand-accent: #166534;
+  --brand-radius: 6px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+}

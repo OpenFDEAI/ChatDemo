@@ -1,0 +1,58 @@
+{
+  "openapi": "3.0.0",
+  "info": { "title": "宏达售后 API（对接文档 v1.1）", "version": "1.1" },
+  "paths": {
+    "/repair-orders": {
+      "get": {
+        "operationId": "listRepairOrders",
+        "summary": "报修单列表",
+        "responses": { "200": { "content": { "application/json": { "schema": {
+          "type": "array", "items": { "$ref": "#/components/schemas/RepairOrder" }
+        } } } } }
+      }
+    },
+    "/repair-orders/{id}": {
+      "get": {
+        "operationId": "getRepairOrder",
+        "summary": "报修单详情",
+        "responses": { "200": { "content": { "application/json": { "schema": {
+          "$ref": "#/components/schemas/RepairOrder"
+        } } } } }
+      }
+    },
+    "/engineers": {
+      "get": {
+        "operationId": "listEngineers",
+        "summary": "工程师名录（含区域与在修数）",
+        "responses": { "200": { "content": { "application/json": { "schema": {
+          "type": "array", "items": { "$ref": "#/components/schemas/Engineer" }
+        } } } } }
+      }
+    }
+  },
+  "components": { "schemas": {
+    "RepairOrder": {
+      "type": "object",
+      "properties": {
+        "orderNo": { "type": "string", "example": "BX-20260718-031" },
+        "machineModel": { "type": "string", "enum": ["HD-210 数控车床", "HD-380 立式加工中心", "HD-500 龙门铣"] },
+        "faultCode": { "type": "string", "enum": ["E009 系统死机", "E117 伺服报警", "E204 主轴异响", "E301 冷却液泄漏"] },
+        "customerName": { "type": "string" },
+        "region": { "type": "string", "enum": ["华东区", "华南区", "华北区", "西南区"] },
+        "reportedAt": { "type": "string", "format": "date-time" },
+        "slaDeadline": { "type": "string", "format": "date-time" },
+        "engineerName": { "type": "string" },
+        "status": { "type": "string", "enum": ["待派工", "维修中", "已完工待回访", "已关闭"] }
+      }
+    },
+    "Engineer": {
+      "type": "object",
+      "properties": {
+        "engineerName": { "type": "string" },
+        "region": { "type": "string", "enum": ["华东区", "华南区", "华北区", "西南区"] },
+        "skills": { "type": "array", "items": { "type": "string" } },
+        "activeCount": { "type": "integer", "example": 3 }
+      }
+    }
+  } }
+}

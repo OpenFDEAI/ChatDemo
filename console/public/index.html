@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FDE 现场控制台</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">FDE <span class="accent">现场控制台</span></div>
+  <div class="topbar-right">
+    <span id="turn-indicator" class="pill hidden">回合运行中…</span>
+    <span id="conn" class="pill pill-off">连接中…</span>
+  </div>
+</header>
+
+<main class="columns">
+  <!-- 左列：录音 / 转写流 / 备注 / 生成回合 -->
+  <section class="col col-left">
+    <div class="card" id="record-card">
+      <h2>录音</h2>
+      <div class="rec-controls">
+        <button id="btn-record" class="btn btn-accent">● 开始</button>
+        <button id="btn-pause" class="btn" disabled>⏸ 暂停</button>
+        <span id="rec-time" class="mono rec-time">00:00</span>
+      </div>
+      <div class="level-track"><div id="level-bar" class="level-bar"></div></div>
+      <div id="asr-reason" class="muted small"></div>
+    </div>
+
+    <div class="card card-grow">
+      <h2>转写流 <span class="hint">高亮 = 未消费增量</span></h2>
+      <div id="transcript" class="transcript mono"></div>
+      <div id="partial" class="partial mono"></div>
+      <div class="manual-row">
+        <input id="manual-input" type="text" placeholder="手动补一句要点（逃生通道，回车写入）">
+        <button id="btn-manual" class="btn">写入</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>本回合备注（可选）</h2>
+      <textarea id="note" rows="2" placeholder="给本回合的补充指令，如「基于候选项目 X 改造」「先做大屏那页」"></textarea>
+      <button id="btn-turn" class="btn btn-accent btn-big">▶ 生成本回合</button>
+      <div id="turn-status" class="muted small"></div>
+      <div id="turn-log" class="turnlog mono"></div>
+    </div>
+  </section>
+
+  <!-- 中列：DEMO_SPEC 预览 + 候选项目 -->
+  <section class="col col-mid">
+    <div class="card card-grow">
+      <h2>DEMO_SPEC.md <span class="hint">单一事实源（投屏区）</span></h2>
+      <div id="spec" class="md"></div>
+    </div>
+    <div class="card card-grow">
+      <h2>CANDIDATES.md <span class="hint">开源候选短名单</span></h2>
+      <div id="candidates" class="md"></div>
+    </div>
+  </section>
+
+  <!-- 右列：Demo iframe -->
+  <section class="col col-right">
+    <div class="card card-grow demo-card">
+      <h2>
+        Demo
+        <button id="btn-refresh" class="btn btn-small">↻ 手动刷新</button>
+        <span id="demo-url" class="muted mono small"></span>
+      </h2>
+      <iframe id="demo-frame" title="demo"></iframe>
+    </div>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
