@@ -109,3 +109,25 @@ test('appendTranscript 忽略空白输入', async () => {
     await fs.rm(root, { recursive: true, force: true });
   }
 });
+
+test('appendJournal 落盘回合输入输出，readJournal 读回，超长输入截断', async (t) => {
+  const { mkdtempSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const ws = mkdtempSync(join(tmpdir(), 'fde-journal-'));
+  const session = new Session(ws);
+  await session.init();
+
+  await session.appendJournal({ id: 1, adapter: 'codex', delta: '客户要海报', ok: true, summary: '海报页已上线' });
+  await session.appendJournal({ id: 2, adapter: 'claude', delta: 'x'.repeat(600), note: '先做大图', ok: false, error: '引擎超时' });
+
+  const journal = await session.readJournal();
+  const { strict: a } = await import('node:assert');
+  a.match(journal, /回合 #1 .*codex.*✅/);
+  a.match(journal, /\*\*总结\*\*：海报页已上线/);
+  a.match(journal, /回合 #2 .*claude.*❌/);
+  a.match(journal, /\*\*备注\*\*：先做大图/);
+  a.match(journal, /\*\*失败原因\*\*：引擎超时/);
+  a.match(journal, /截断，全文见 TRANSCRIPT\.md/);
+  t.diagnostic('journal ok');
+});

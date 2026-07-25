@@ -250,12 +250,13 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
   };
 
   const stateMessage = async (): Promise<Record<string, unknown>> => {
-    const [spec, candidates, transcript, st, inputs] = await Promise.all([
+    const [spec, candidates, transcript, st, inputs, journal] = await Promise.all([
       session.readSpec(),
       session.readCandidates(),
       session.readTranscript(),
       session.readState(),
       session.listInputs(),
+      session.readJournal(),
     ]);
     return {
       type: 'state',
@@ -267,6 +268,7 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
       spec,
       candidates,
       inputs,
+      journal,
       transcript,
       consumedOffset: Math.min(st.consumedOffset, transcript.length),
       turnActive: runner.activeId,
@@ -340,14 +342,28 @@ export async function startConsole(config: ConsoleConfig): Promise<RunningConsol
         case 'turn-start': {
           const note = typeof msg.note === 'string' && msg.note.trim() ? msg.note : pendingNote;
           pendingNote = '';
+          const engine = router.active;
           const { id, done } = runner.enqueue(note);
-          broadcast({
-            type: 'turn-start',
-            turnId: id,
-            queued: runner.queuedCount,
-            adapter: router.active,
+          broadcast({ type: 'turn-start', turnId: id, queued: runner.queuedCount, adapter: engine });
+          void done.then(async (result) => {
+            // 回合落账：输入→输出进 SESSION.md，面板「回合记录」卡片渲染。
+            const summary = result.events.find(
+              (e): e is Extract<typeof e, { type: 'summary' }> => e.type === 'summary',
+            );
+            const error = result.events.find(
+              (e): e is Extract<typeof e, { type: 'error' }> => e.type === 'error',
+            );
+            await session.appendJournal({
+              id: result.id,
+              adapter: engine,
+              delta: result.input?.transcriptDelta ?? '',
+              ...(result.input?.note ? { note: result.input.note } : {}),
+              ok: result.ok,
+              ...(summary ? { summary: summary.summary } : {}),
+              ...(error ? { error: error.message } : {}),
+            });
+            await broadcastState();
           });
-          void done.then(() => broadcastState());
           break;
         }
         case 'set-adapter': {

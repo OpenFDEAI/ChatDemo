@@ -18,6 +18,7 @@ const STATE_FILE = '.console-state.json';
 const SPEC_FILE = 'DEMO_SPEC.md';
 const TRANSCRIPT_FILE = 'TRANSCRIPT.md';
 const CANDIDATES_FILE = 'CANDIDATES.md';
+const SESSION_FILE = 'SESSION.md';
 
 const SPEC_SKELETON = `# Demo Spec
 
@@ -163,6 +164,44 @@ export class Session {
   async markConsumed(endOffset: number): Promise<void> {
     const current = await this.readState();
     await this.writeState({ ...current, consumedOffset: Math.max(0, endOffset) });
+  }
+
+  /**
+   * 回合落账：每回合的输入 → 输出写进 SESSION.md（工作区持久记录，
+   * 面板「回合记录」卡片渲染它；刷新/重启不丢）。
+   */
+  async appendJournal(entry: {
+    id: number;
+    adapter: string;
+    delta: string;
+    note?: string;
+    ok: boolean;
+    summary?: string;
+    error?: string;
+  }): Promise<void> {
+    const clip = (s: string, n: number): string =>
+      s.length > n ? `${s.slice(0, n)}…（截断，全文见 TRANSCRIPT.md）` : s;
+    const input = entry.delta.trim() ? clip(entry.delta.trim(), 500) : '（无新增转写）';
+    const lines = [
+      `## 回合 #${entry.id} · ${timestamp()} · ${entry.adapter} · ${entry.ok ? '✅ 完成' : '❌ 失败'}`,
+      '',
+      `**输入**：${input}`,
+      ...(entry.note ? [`**备注**：${entry.note}`] : []),
+      entry.ok
+        ? `**总结**：${entry.summary ?? '（无总结）'}`
+        : `**失败原因**：${entry.error ?? '（未知）'}`,
+      '',
+    ];
+    await fs.appendFile(this.file(SESSION_FILE), `${lines.join('\n')}\n`, 'utf8');
+  }
+
+  async readJournal(): Promise<string> {
+    try {
+      return await fs.readFile(this.file(SESSION_FILE), 'utf8');
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') return '';
+      throw err;
+    }
   }
 
   /** 持久化面板上的引擎选择（保留书签）。 */

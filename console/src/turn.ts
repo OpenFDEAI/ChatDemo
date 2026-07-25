@@ -35,6 +35,8 @@ export interface TurnResult {
   id: number;
   ok: boolean;
   events: TurnEvent[];
+  /** 本回合实际消费的输入（供回合落账）。 */
+  input?: TurnInput;
 }
 
 export type TurnListener = (turnId: number, event: TurnEvent) => void;
@@ -94,6 +96,7 @@ export class TurnRunner {
     this.active = id;
     const events: TurnEvent[] = [];
     let ok = false;
+    let consumedInput: TurnInput | undefined;
     try {
       const delta = await this.session.readDelta();
       const input: TurnInput = {
@@ -101,6 +104,7 @@ export class TurnRunner {
         transcriptDelta: delta.text,
         ...(note && note.trim() !== '' ? { note: note.trim() } : {}),
       };
+      consumedInput = input;
       let failed = false;
       for await (const event of this.adapter.run(input)) {
         if (event.type === 'done') {
@@ -122,6 +126,6 @@ export class TurnRunner {
     } finally {
       this.active = null;
     }
-    return { id, ok, events };
+    return { id, ok, events, ...(consumedInput ? { input: consumedInput } : {}) };
   }
 }

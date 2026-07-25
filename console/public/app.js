@@ -30,6 +30,8 @@ const el = {
   turnStatus: $('turn-status'),
   turnLog: $('turn-log'),
   spec: $('spec'),
+  journal: $('journal'),
+  journalCard: $('journal-card'),
   candidates: $('candidates'),
   candidatesCard: $('candidates-card'),
   btnRefresh: $('btn-refresh'),
@@ -161,6 +163,12 @@ function renderState(msg) {
   }
   renderTranscript(msg.transcript, msg.consumedOffset);
   el.spec.innerHTML = renderMarkdown(msg.spec || '（空）');
+  const hasJournal = Boolean(msg.journal && msg.journal.trim());
+  el.journalCard.classList.toggle('hidden', !hasJournal);
+  if (hasJournal) {
+    el.journal.innerHTML = renderMarkdown(msg.journal);
+    el.journal.scrollTop = el.journal.scrollHeight;
+  }
   el.candidates.innerHTML = renderMarkdown(msg.candidates || '（空）');
   // 空清单不占中栏：表格除表头/分隔行外没有数据行就藏起整张卡。
   const candidateRows = (msg.candidates || '')

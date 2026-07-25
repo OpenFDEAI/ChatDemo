@@ -267,3 +267,9 @@ input[type="text"]:focus, textarea:focus { outline: none; border-color: var(--ac
   font: inherit;
 }
 .asr-creds.hidden { display: none; }
+
+/* 回合记录卡：限高滚动，最新回合在底部 */
+.journal {
+  max-height: 260px;
+  overflow-y: auto;
+}
