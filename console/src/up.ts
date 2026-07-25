@@ -133,9 +133,12 @@ async function main(): Promise<void> {
   const demoUrl = `http://localhost:${demoPort}`;
 
   console.log(`[fde-demo] 启动 Demo dev server → ${demoUrl}`);
+  // detached：让 npm 及其 fork 出的 next-server 同组，退出时整组带走——
+  // 只杀 npm 会留下孤儿 next dev，与下次启动抢写 .next 缓存（实测事故）。
   const dev: ChildProcess = spawn('npm', ['run', 'dev', '--', '-p', String(demoPort)], {
     cwd: appDir,
     stdio: ['ignore', 'pipe', 'pipe'],
+    detached: true,
   });
   dev.stdout?.on('data', (c: Buffer) => {
     const line = c.toString().trim();
@@ -146,7 +149,13 @@ async function main(): Promise<void> {
     if (line) console.error(`[demo] ${line.split('\n')[0]}`);
   });
   const stopDev = (): void => {
-    if (!dev.killed) dev.kill();
+    if (dev.pid && !dev.killed) {
+      try {
+        process.kill(-dev.pid, 'SIGTERM'); // 负 pid = 杀整个进程组
+      } catch {
+        dev.kill();
+      }
+    }
   };
   process.on('SIGINT', () => {
     stopDev();
